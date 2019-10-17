@@ -1,0 +1,60 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29411.108
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{8A15A9D6-663B-4C81-BC6C-5743CB0B85EA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Liyanjie.FakeMQ.Core", "src\Liyanjie.FakeMQ.Core\Liyanjie.FakeMQ.Core.csproj", "{9CC3714D-5702-445C-BB5F-87F21D1B9F04}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Liyanjie.FakeMQ.AspNetCore", "src\Liyanjie.FakeMQ.AspNetCore\Liyanjie.FakeMQ.AspNetCore.csproj", "{6F1B362A-946F-4402-9063-DAF6B115650B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Liyanjie.FakeMQ", "src\Liyanjie.FakeMQ\Liyanjie.FakeMQ.csproj", "{F0907455-45DC-446C-A378-2A92D0DA13AB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{027EBFBC-1217-4D73-806D-A62FC8AC543E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Liyanjie.FakeMQ.Sample.AspNetCore", "sample\Liyanjie.FakeMQ.Sample.AspNetCore\Liyanjie.FakeMQ.Sample.AspNetCore.csproj", "{5E40624B-253C-4241-9D4D-B2DA1C3CB768}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Liyanjie.FakeMQ.Sample.ConsoleApp", "sample\Liyanjie.FakeMQ.Sample.ConsoleApp\Liyanjie.FakeMQ.Sample.ConsoleApp.csproj", "{79D14F29-AC05-4A75-A80D-8EA747DDCDCC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9CC3714D-5702-445C-BB5F-87F21D1B9F04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9CC3714D-5702-445C-BB5F-87F21D1B9F04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9CC3714D-5702-445C-BB5F-87F21D1B9F04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9CC3714D-5702-445C-BB5F-87F21D1B9F04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F1B362A-946F-4402-9063-DAF6B115650B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F1B362A-946F-4402-9063-DAF6B115650B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F1B362A-946F-4402-9063-DAF6B115650B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F1B362A-946F-4402-9063-DAF6B115650B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F0907455-45DC-446C-A378-2A92D0DA13AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0907455-45DC-446C-A378-2A92D0DA13AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F0907455-45DC-446C-A378-2A92D0DA13AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F0907455-45DC-446C-A378-2A92D0DA13AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E40624B-253C-4241-9D4D-B2DA1C3CB768}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E40624B-253C-4241-9D4D-B2DA1C3CB768}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E40624B-253C-4241-9D4D-B2DA1C3CB768}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E40624B-253C-4241-9D4D-B2DA1C3CB768}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79D14F29-AC05-4A75-A80D-8EA747DDCDCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79D14F29-AC05-4A75-A80D-8EA747DDCDCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79D14F29-AC05-4A75-A80D-8EA747DDCDCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79D14F29-AC05-4A75-A80D-8EA747DDCDCC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9CC3714D-5702-445C-BB5F-87F21D1B9F04} = {8A15A9D6-663B-4C81-BC6C-5743CB0B85EA}
+		{6F1B362A-946F-4402-9063-DAF6B115650B} = {8A15A9D6-663B-4C81-BC6C-5743CB0B85EA}
+		{F0907455-45DC-446C-A378-2A92D0DA13AB} = {8A15A9D6-663B-4C81-BC6C-5743CB0B85EA}
+		{5E40624B-253C-4241-9D4D-B2DA1C3CB768} = {027EBFBC-1217-4D73-806D-A62FC8AC543E}
+		{79D14F29-AC05-4A75-A80D-8EA747DDCDCC} = {027EBFBC-1217-4D73-806D-A62FC8AC543E}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B21ABA3C-EF0E-4A9E-BBD5-01D88C7A743F}
+	EndGlobalSection
+EndGlobal
