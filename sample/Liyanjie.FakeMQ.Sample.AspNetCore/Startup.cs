@@ -22,7 +22,6 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore
             });
 
             services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(JsonConvert.SerializeObject, JsonConvert.DeserializeObject);
-            services.AddTransient<MessageEventHandler>();
 
             services.AddMvc();
         }

@@ -6,34 +6,34 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure
 {
     public class FakeMQProcessStore : IFakeMQProcessStore, IDisposable
     {
-        readonly SqlCeContext db;
-        public FakeMQProcessStore(SqlCeContext db)
+        readonly SqlCeContext context;
+        public FakeMQProcessStore(SqlCeContext context)
         {
-            this.db = db;
+            this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         public void Dispose()
         {
-            this.db?.Dispose();
+            this.context?.Dispose();
         }
 
         public bool Add(FakeMQProcess process)
         {
-            if (db.FakeMQProcesses.Any(_ => _.Subscription == process.Subscription))
+            if (context.FakeMQProcesses.Any(_ => _.Subscription == process.Subscription))
                 return true;
 
-            db.FakeMQProcesses.Add(process);
+            context.FakeMQProcesses.Add(process);
 
             return Save();
         }
         public FakeMQProcess Get(string subscription)
         {
-            return db.FakeMQProcesses.AsNoTracking()
+            return context.FakeMQProcesses.AsNoTracking()
                 .SingleOrDefault(_ => _.Subscription == subscription);
         }
         public bool Update(string subscription, long timestamp)
         {
-            var item = db.FakeMQProcesses.SingleOrDefault(_ => _.Subscription == subscription);
+            var item = context.FakeMQProcesses.SingleOrDefault(_ => _.Subscription == subscription);
             if (item == null)
                 return true;
 
@@ -43,11 +43,11 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure
         }
         public bool Delete(string subscription)
         {
-            var item = db.FakeMQProcesses.SingleOrDefault(_ => _.Subscription == subscription);
+            var item = context.FakeMQProcesses.SingleOrDefault(_ => _.Subscription == subscription);
             if (item == null)
                 return true;
 
-            db.FakeMQProcesses.Remove(item);
+            context.FakeMQProcesses.Remove(item);
 
             return Save();
         }
@@ -56,7 +56,7 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure
         {
             try
             {
-                db.SaveChanges();
+                context.SaveChanges();
                 return true;
             }
             catch { }

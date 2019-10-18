@@ -6,26 +6,26 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure
 {
     public class FakeMQEventStore : IFakeMQEventStore, IDisposable
     {
-        readonly SqlCeContext db;
-        public FakeMQEventStore(SqlCeContext db)
+        readonly SqlCeContext context;
+        public FakeMQEventStore(SqlCeContext context)
         {
-            this.db = db;
+            this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         public void Dispose()
         {
-            this.db?.Dispose();
+            this.context?.Dispose();
         }
 
         public bool Add(FakeMQEvent @event)
         {
-            db.FakeMQEvents.Add(@event);
+            context.FakeMQEvents.Add(@event);
             return Save();
         }
 
         public FakeMQEvent Get(string type, long timestamp)
         {
-            return db.FakeMQEvents.AsNoTracking()
+            return context.FakeMQEvents.AsNoTracking()
                 .Where(_ => _.Type == type && _.Timestamp > timestamp)
                 .OrderBy(_ => _.Timestamp)
                 .FirstOrDefault();
@@ -35,7 +35,7 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure
         {
             try
             {
-                db.SaveChanges();
+                context.SaveChanges();
                 return true;
             }
             catch { }

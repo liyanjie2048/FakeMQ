@@ -21,7 +21,6 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net
             services.AddScoped(sp => new SqlCeContext(ConfigurationManager.ConnectionStrings["SqlServerCe"].ConnectionString));
 
             services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(JsonConvert.SerializeObject, JsonConvert.DeserializeObject);
-            services.AddTransient<MessageEventHandler>();
         }
         static bool ShowMessages(IServiceProvider serviceProvider)
         {

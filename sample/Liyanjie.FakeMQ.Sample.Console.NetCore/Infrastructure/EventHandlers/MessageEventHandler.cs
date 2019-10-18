@@ -12,7 +12,7 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure.EventHandlers
         readonly SqliteContext context;
         public MessageEventHandler(SqliteContext context)
         {
-            this.context = context;
+            this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         public void Dispose()

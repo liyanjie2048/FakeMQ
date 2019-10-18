@@ -12,7 +12,7 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure.EventHandlers
         readonly SqlCeContext context;
         public MessageEventHandler(SqlCeContext context)
         {
-            this.context = context;
+            this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         public void Dispose()

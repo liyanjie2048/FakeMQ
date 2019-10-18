@@ -21,7 +21,6 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore
             services.AddDbContext<SqliteContext>();
 
             services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(_ => JsonSerializer.Serialize(_), (input, type) => JsonSerializer.Deserialize(input, type));
-            services.AddSingleton<MessageEventHandler>();
         }
         static void InitializeDatabase(IServiceProvider serviceProvider)
         {

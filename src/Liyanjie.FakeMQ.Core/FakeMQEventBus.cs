@@ -114,7 +114,7 @@ namespace Liyanjie.FakeMQ
                     if (@event == null)
                         continue;
 
-                    var handler = serviceProvider.GetService(handlerType);
+                    var handler = serviceProvider.GetServiceOrCreateInstance(handlerType);
                     if (handler == null)
                         continue;
 

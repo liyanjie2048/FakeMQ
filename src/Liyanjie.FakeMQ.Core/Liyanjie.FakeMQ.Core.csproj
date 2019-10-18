@@ -13,6 +13,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Liyanjie.Utilities" Version="1.0.0" />
         <PackageReference Include="Polly" Version="7.1.1" />
     </ItemGroup>
 
