@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using Liyanjie.FakeMQ.Sample.AspNetCore.Domains;
+using Liyanjie.FakeMQ;
 
-namespace Liyanjie.FakeMQ.Sample.AspNetCore.Infrastructure.EventHandlers
+using Liyanjie.FakeMQ.Sample.Console.NetCore.Models;
+
+namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure.EventHandlers
 {
     public class MessageEventHandler : IFakeMQEventHandler<MessageEvent>, IDisposable
     {

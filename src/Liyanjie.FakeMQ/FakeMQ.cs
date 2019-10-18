@@ -1,9 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
 namespace Liyanjie.FakeMQ
 {
     public sealed class FakeMQ
@@ -27,11 +24,7 @@ namespace Liyanjie.FakeMQ
             {
                 return executingTask;
             }
-#if NET45
             return Task.FromResult(0);
-#else
-            return Task.CompletedTask;
-#endif
         }
         public static async Task StopAsync(CancellationToken cancellationToken)
         {
@@ -46,6 +39,11 @@ namespace Liyanjie.FakeMQ
                     await Task.WhenAny(executingTask, Task.Delay(-1, cancellationToken));
                 }
             }
+        }
+
+        ~FakeMQ()
+        {
+            stoppingCts.Cancel();
         }
     }
 }

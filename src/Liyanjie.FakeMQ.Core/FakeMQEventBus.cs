@@ -4,9 +4,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
 using Polly;
 
 namespace Liyanjie.FakeMQ
@@ -14,10 +11,9 @@ namespace Liyanjie.FakeMQ
     /// <summary>
     /// 
     /// </summary>
-    public class FakeMQEventBus : IDisposable
+    public class FakeMQEventBus
     {
-        readonly IServiceScope scope;
-        readonly ILogger<FakeMQEventBus> logger;
+        readonly IServiceProvider serviceProvider;
         readonly IFakeMQEventStore eventStore;
         readonly IFakeMQProcessStore processStore;
         readonly IDictionary<Type, Type> subscriptions = new Dictionary<Type, Type>();
@@ -26,24 +22,12 @@ namespace Liyanjie.FakeMQ
         /// 
         /// </summary>
         /// <param name="serviceProvider"></param>
-        public FakeMQEventBus(
-            IServiceScope scope,
-            ILogger<FakeMQEventBus> logger)
+        public FakeMQEventBus(IServiceProvider serviceProvider)
         {
-            this.scope = scope;
-            this.logger = logger;
+            this.serviceProvider = serviceProvider;
 
-            this.eventStore = scope.ServiceProvider.GetRequiredService<IFakeMQEventStore>();
-            this.processStore = scope.ServiceProvider.GetRequiredService<IFakeMQProcessStore>();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public void Dispose()
-        {
-            subscriptions.Clear();
-            scope.Dispose();
+            this.eventStore = serviceProvider.GetService(typeof(IFakeMQEventStore)) as IFakeMQEventStore;
+            this.processStore = serviceProvider.GetService(typeof(IFakeMQProcessStore)) as IFakeMQProcessStore;
         }
 
         /// <summary>
@@ -61,7 +45,6 @@ namespace Liyanjie.FakeMQ
             };
             if (TryExecute(() => eventStore.Add(@event)))
             {
-                logger.LogInformation($"Publish an event:Id={@event.Id},Type={@event.Type},Message={@event.Message}");
                 return true;
             }
             return false;
@@ -72,7 +55,7 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <typeparam name="TEventMessage"></typeparam>
         /// <typeparam name="TEventHandler"></typeparam>
-        public void Subscribe<TEventMessage, TEventHandler>()
+        public FakeMQEventBus Subscribe<TEventMessage, TEventHandler>()
             where TEventMessage : IFakeMQEventMessage
             where TEventHandler : IFakeMQEventHandler<TEventMessage>
         {
@@ -87,9 +70,9 @@ namespace Liyanjie.FakeMQ
             {
                 if (!subscriptions.ContainsKey(handlerType))
                     subscriptions.Add(handlerType, messageType);
-
-                logger.LogInformation($"Subscribe:Id={subscriptionId}");
             }
+
+            return this;
         }
 
         /// <summary>
@@ -109,8 +92,6 @@ namespace Liyanjie.FakeMQ
             {
                 subscriptions.Remove(handlerType);
                 TryExecute(() => processStore.Delete(subscriptionId));
-
-                logger.LogInformation($"Unsubscribe:Id={subscriptionId}");
             }
         }
 
@@ -133,24 +114,17 @@ namespace Liyanjie.FakeMQ
                     if (@event == null)
                         continue;
 
-                    var handler = ActivatorUtilities.GetServiceOrCreateInstance(scope.ServiceProvider, handlerType);
+                    var handler = serviceProvider.GetService(handlerType);
                     if (handler == null)
                         continue;
 
                     tasks.Add(Task.Run(async () =>
                     {
                         var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
-                        var method =
-#if NET45
-                            concreteType.GetMethod("HandleAsync");
-#else
-                            concreteType.GetTypeInfo().GetMethod("HandleAsync");
-#endif
+                        var method = concreteType.GetTypeInfo().GetMethod("HandleAsync");
                         var result = await (Task<bool>)method.Invoke(handler, new[] { @event.GetMsgObject(messageType) });
                         if (result)
                             TryExecute(() => processStore.Update(subscriptionId, @event.Timestamp));
-
-                        logger.LogInformation($"Process an event:Id={@event.Id},Handler={handlerType.FullName},Result={result}");
                     }));
                 }
 

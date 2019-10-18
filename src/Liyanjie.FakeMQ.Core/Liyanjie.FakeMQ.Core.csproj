@@ -1,15 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-      <TargetFrameworks>net45;netstandard1.5;</TargetFrameworks>
-      <Description>用于单启动项目内的伪消息队列</Description>
-      <Copyright>© Liyanjie.me</Copyright>
-      <Authors>liyanjie8712@outlook.com</Authors>
-      <Company>Liyanjie.me</Company>
-      <RepositoryUrl>https://github.com/liyanjie8712/FakeMQ</RepositoryUrl>
-      <PackageProjectUrl>https://github.com/liyanjie8712/FakeMQ</PackageProjectUrl>
-      <RepositoryType>Git</RepositoryType>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>net45;netstandard1.5;</TargetFrameworks>
+        <Description>用于单启动项目内的伪消息队列</Description>
+        <Copyright>© Liyanjie.me</Copyright>
+        <Authors>liyanjie8712@outlook.com</Authors>
+        <Company>Liyanjie.me</Company>
+        <RepositoryUrl>https://github.com/liyanjie8712/FakeMQ</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/liyanjie8712/FakeMQ</PackageProjectUrl>
+        <RepositoryType>Git</RepositoryType>
+        <RootNamespace>Liyanjie.FakeMQ</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Polly" Version="7.1.1" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)'=='netstandard1.5'">
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="1.0.0" />
+    </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
         <DocumentationFile>bin\Release\net45\Liyanjie.FakeMQ.Core.xml</DocumentationFile>
@@ -22,11 +31,5 @@
     <Target Name="MovePackage" AfterTargets="Pack">
         <Move SourceFiles="$(OutputPath)$(PackageId).$(PackageVersion).nupkg" DestinationFolder="D:\_NugetPackages\" />
     </Target>
-
-    <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="1.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="1.0.0" />
-        <PackageReference Include="Polly" Version="7.1.1" />
-    </ItemGroup>
 
 </Project>

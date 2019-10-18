@@ -21,7 +21,8 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore
                 builder.UseSqlite(@"Data Source=.\Database.sqlite");
             });
 
-            services.AddFakeMQ<EventStore, ProcessStore>(JsonConvert.SerializeObject, JsonConvert.DeserializeObject);
+            services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(JsonConvert.SerializeObject, JsonConvert.DeserializeObject);
+            services.AddTransient<MessageEventHandler>();
 
             services.AddMvc();
         }
@@ -35,7 +36,7 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore
 
             var eventBus = app.ApplicationServices.GetRequiredService<FakeMQEventBus>();
             eventBus.Subscribe<MessageEvent, MessageEventHandler>();
-
+            
             app.UseMvc();
         }
     }

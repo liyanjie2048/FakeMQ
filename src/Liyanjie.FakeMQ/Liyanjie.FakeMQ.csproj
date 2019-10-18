@@ -1,11 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>net45;netstandard1.5;</TargetFrameworks>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>net45;netstandard1.5;</TargetFrameworks>
+        <Description>Liyanjie.FakeMQ</Description>
+        <Copyright>© Liyanjie.me</Copyright>
+        <Authors>liyanjie8712@outlook.com</Authors>
+        <Company>Liyanjie.me</Company>
+        <RepositoryUrl>https://github.com/liyanjie8712/FakeMQ</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/liyanjie8712/FakeMQ</PackageProjectUrl>
+        <RepositoryType>Git</RepositoryType>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Liyanjie.FakeMQ.Core\Liyanjie.FakeMQ.Core.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Liyanjie.FakeMQ.Core\Liyanjie.FakeMQ.Core.csproj" />
+    </ItemGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
+        <DocumentationFile>bin\Release\net45\Liyanjie.FakeMQ.Core.xml</DocumentationFile>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard1.5|AnyCPU'">
+        <DocumentationFile>bin\Release\netstandard1.5\Liyanjie.FakeMQ.Core.xml</DocumentationFile>
+    </PropertyGroup>
+
+    <Target Name="MovePackage" AfterTargets="Pack">
+        <Move SourceFiles="$(OutputPath)$(PackageId).$(PackageVersion).nupkg" DestinationFolder="D:\_NugetPackages\" />
+    </Target>
 
 </Project>

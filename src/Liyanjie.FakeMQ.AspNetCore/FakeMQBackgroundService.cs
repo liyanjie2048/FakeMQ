@@ -26,9 +26,34 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await eventBus.ProcessAsync(stoppingToken);
+            return eventBus.ProcessAsync(stoppingToken);
         }
     }
 }
+#if !NETSTANDARD2_0
+namespace Microsoft.Extensions.Hosting
+{
+    using System;
+
+    public abstract class BackgroundService
+    {
+        Task executingTask;
+
+        protected abstract Task ExecuteAsync(CancellationToken stoppingToken);
+
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            executingTask = ExecuteAsync(cancellationToken);
+
+            if (executingTask.IsCompleted)
+            {
+                return executingTask;
+            }
+
+            return Task.FromResult(0);
+        }
+    }
+}
+#endif

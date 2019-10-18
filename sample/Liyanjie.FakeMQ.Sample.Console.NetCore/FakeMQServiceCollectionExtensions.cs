@@ -26,22 +26,13 @@ namespace Microsoft.Extensions.DependencyInjection
             where TEventStore : class, IFakeMQEventStore
             where TProcessStore : class, IFakeMQProcessStore
         {
-            FakeMQDefaults.JsonSerialize = jsonSerialize ?? throw new ArgumentNullException(nameof(jsonSerialize));
-            FakeMQDefaults.JsonDeserialize = jsonDeserialize ?? throw new ArgumentNullException(nameof(jsonDeserialize));
-
             services.AddTransient<IFakeMQEventStore, TEventStore>();
             services.AddTransient<IFakeMQProcessStore, TProcessStore>();
-            services.AddSingleton(serviceProvider => new FakeMQEventBus(
-#if NETSTANDARD2_0
-                serviceProvider.CreateScope().ServiceProvider
-#else
-                serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope().ServiceProvider
-#endif
-            ));
+            services.AddSingleton(serviceProvider => new FakeMQEventBus(serviceProvider.CreateScope().ServiceProvider));
 
-#if NETSTANDARD2_0
-            services.AddHostedService<FakeMQBackgroundService>();
-#endif
+            FakeMQDefaults.JsonSerialize = jsonSerialize;
+            FakeMQDefaults.JsonDeserialize = jsonDeserialize;
+
             return services;
         }
     }
