@@ -32,7 +32,7 @@ namespace Liyanjie.FakeMQ
         }
     }
 }
-#if !NETSTANDARD2_0
+#if NET451 || NETSTANDARD1_5
 namespace Microsoft.Extensions.Hosting
 {
     using System;

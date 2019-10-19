@@ -10,11 +10,11 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 
         /// </summary>
-        public static Func<object, string> JsonSerialize { get; set; }
+        public static Func<object, string> Serialize { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public static Func<string, Type, object> JsonDeserialize { get; set; }
+        public static Func<string, Type, object> Deserialize { get; set; }
     }
 }

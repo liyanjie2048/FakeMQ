@@ -28,8 +28,8 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddTransient<IFakeMQProcessStore, TProcessStore>();
             services.AddSingleton(serviceProvider => new FakeMQEventBus(serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope().ServiceProvider));
 
-            FakeMQDefaults.JsonSerialize = jsonSerialize;
-            FakeMQDefaults.JsonDeserialize = jsonDeserialize;
+            FakeMQDefaults.Serialize = jsonSerialize;
+            FakeMQDefaults.Deserialize = jsonDeserialize;
 
             return services;
         }

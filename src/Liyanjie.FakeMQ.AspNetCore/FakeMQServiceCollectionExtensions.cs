@@ -26,8 +26,8 @@ namespace Microsoft.Extensions.DependencyInjection
             where TEventStore : class, IFakeMQEventStore
             where TProcessStore : class, IFakeMQProcessStore
         {
-            FakeMQDefaults.JsonSerialize = jsonSerialize ?? throw new ArgumentNullException(nameof(jsonSerialize));
-            FakeMQDefaults.JsonDeserialize = jsonDeserialize ?? throw new ArgumentNullException(nameof(jsonDeserialize));
+            FakeMQDefaults.Serialize = jsonSerialize ?? throw new ArgumentNullException(nameof(jsonSerialize));
+            FakeMQDefaults.Deserialize = jsonDeserialize ?? throw new ArgumentNullException(nameof(jsonDeserialize));
 
             services.AddTransient<IFakeMQEventStore, TEventStore>();
             services.AddTransient<IFakeMQProcessStore, TProcessStore>();

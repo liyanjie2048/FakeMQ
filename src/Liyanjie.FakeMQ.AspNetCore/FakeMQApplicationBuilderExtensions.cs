@@ -1,4 +1,4 @@
-﻿#if !NETSTANDARD2_0
+﻿#if NET451 || NETSTANDARD1_5
 using Liyanjie.FakeMQ;
 
 using Microsoft.AspNetCore.Hosting;

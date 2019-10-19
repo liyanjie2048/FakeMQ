@@ -11,7 +11,7 @@ namespace Liyanjie.FakeMQ
     /// <summary>
     /// 
     /// </summary>
-    public class FakeMQEventBus
+    public sealed class FakeMQEventBus
     {
         readonly IServiceProvider serviceProvider;
         readonly IFakeMQEventStore eventStore;
