@@ -121,7 +121,7 @@ namespace Liyanjie.FakeMQ
                     tasks.Add(Task.Run(async () =>
                     {
                         var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
-                        var method = concreteType.GetTypeInfo().GetMethod("HandleAsync");
+                        var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<IFakeMQEventMessage>.HandleAsync));
                         var result = await (Task<bool>)method.Invoke(handler, new[] { @event.GetMsgObject(messageType) });
                         if (result)
                             TryExecute(() => processStore.Update(subscriptionId, @event.Timestamp));

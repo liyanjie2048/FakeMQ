@@ -14,16 +14,11 @@ namespace Microsoft.AspNetCore.Builder
         /// <summary>
         /// 
         /// </summary>
-        /// <typeparam name="TEventStore"></typeparam>
-        /// <typeparam name="TProcessStore"></typeparam>
-        /// <param name="services"></param>
-        /// <param name="jsonSerialize"></param>
-        /// <param name="jsonDeserialize"></param>
-        /// <returns></returns>
-        public static void RunFakeMQ(this IApplicationBuilder app, IApplicationLifetime applicationLifetime)
+        /// <param name="app"></param>
+        public static void RunFakeMQ(this IApplicationBuilder app)
         {
-            _ = new FakeMQBackgroundService(app.ApplicationServices.GetService<FakeMQEventBus>())
-                .StartAsync(applicationLifetime.ApplicationStopping);
+            _ = new FakeMQBackgroundService(app.ApplicationServices.GetRequiredService<FakeMQEventBus>())
+                .StartAsync(app.ApplicationServices.GetRequiredService<IApplicationLifetime>().ApplicationStopping);
         }
     }
 }
