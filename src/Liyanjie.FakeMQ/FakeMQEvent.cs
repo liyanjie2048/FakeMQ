@@ -28,10 +28,10 @@ namespace Liyanjie.FakeMQ
         public long Timestamp { get; set; } = DateTimeOffset.Now.Ticks;
 
         internal object GetMsgObject(Type messageType)
-            => FakeMQDefaults.Deserialize(Message, messageType);
+            => FakeMQ.Deserialize(Message, messageType);
 
         internal static string GetMsgString<TEventMessage>(TEventMessage message)
             where TEventMessage : IFakeMQEventMessage
-            => FakeMQDefaults.Serialize(message);
+            => FakeMQ.Serialize(message);
     }
 }

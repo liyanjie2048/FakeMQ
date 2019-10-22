@@ -8,52 +8,20 @@ namespace Liyanjie.FakeMQ
     /// <summary>
     /// 
     /// </summary>
-    public class FakeMQBackgroundService : BackgroundService
+    public class FakeMQBackgroundService : IHostedService
     {
-        readonly FakeMQEventBus eventBus;
-
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="eventBus"></param>
-        public FakeMQBackgroundService(FakeMQEventBus eventBus)
-        {
-            this.eventBus = eventBus;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="stoppingToken"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            return eventBus.ProcessAsync(stoppingToken);
-        }
+        public Task StartAsync(CancellationToken cancellationToken) => FakeMQ.StartAsync();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public Task StopAsync(CancellationToken cancellationToken) => FakeMQ.StopAsync();
     }
 }
-#if NET451 || NETSTANDARD1_5
-namespace Microsoft.Extensions.Hosting
-{
-    using System;
-
-    public abstract class BackgroundService
-    {
-        Task executingTask;
-
-        protected abstract Task ExecuteAsync(CancellationToken stoppingToken);
-
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
-            executingTask = ExecuteAsync(cancellationToken);
-
-            if (executingTask.IsCompleted)
-            {
-                return executingTask;
-            }
-
-            return Task.FromResult(0);
-        }
-    }
-}
-#endif

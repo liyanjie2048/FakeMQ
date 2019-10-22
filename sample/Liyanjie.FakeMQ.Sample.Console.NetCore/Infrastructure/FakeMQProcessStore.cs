@@ -1,19 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
-using Liyanjie.FakeMQ;
-
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
 {
     public class FakeMQProcessStore : IFakeMQProcessStore, IDisposable
     {
-        readonly SqliteContext context;
-        public FakeMQProcessStore(SqliteContext context)
+        readonly DataContext context;
+        public FakeMQProcessStore(DataContext context)
         {
             this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
@@ -23,44 +18,50 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
             this.context?.Dispose();
         }
 
-        public bool Add(FakeMQProcess process)
+        public async Task<bool> AddAsync(FakeMQProcess process)
         {
-            if (context.FakeMQProcesses.Any(_ => _.Subscription == process.Subscription))
+            if (await context.FakeMQProcesses.AnyAsync(_ => _.Subscription == process.Subscription))
                 return true;
 
             context.FakeMQProcesses.Add(process);
 
-            return Save();
+            return await SaveAsync();
         }
-        public FakeMQProcess Get(string subscription)
+        public async Task<FakeMQProcess> GetAsync(string subscription)
         {
-            return context.FakeMQProcesses.AsNoTracking().SingleOrDefault(_ => _.Subscription == subscription);
+            return await context.FakeMQProcesses.AsNoTracking()
+                .SingleOrDefaultAsync(_ => _.Subscription == subscription);
         }
-        public bool Update(string subscription, long timestamp)
+        public async Task<bool> UpdateAsync(string subscription, long timestamp)
         {
-            var item = context.FakeMQProcesses.SingleOrDefault(_ => _.Subscription == subscription);
+            var item = await context.FakeMQProcesses.SingleOrDefaultAsync(_ => _.Subscription == subscription);
             if (item == null)
                 return true;
 
             item.Timestamp = timestamp;
 
-            return Save();
+            return await SaveAsync();
         }
-        public bool Delete(string subscription)
+        public async Task<bool> DeleteAsync(string subscription)
         {
-            var item = context.FakeMQProcesses.SingleOrDefault(_ => _.Subscription == subscription);
+            var item = await context.FakeMQProcesses.SingleOrDefaultAsync(_ => _.Subscription == subscription);
             if (item == null)
                 return true;
 
             context.FakeMQProcesses.Remove(item);
 
-            return Save();
+            return await SaveAsync();
         }
 
-        bool Save()
+        async Task<bool> SaveAsync()
         {
-            context.SaveChanges();
-            return true;
+            try
+            {
+                await context.SaveChangesAsync();
+                return true;
+            }
+            catch { }
+            return false;
         }
     }
 }

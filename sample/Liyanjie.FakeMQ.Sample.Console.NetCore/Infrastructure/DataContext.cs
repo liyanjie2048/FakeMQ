@@ -1,13 +1,15 @@
-﻿using Liyanjie.FakeMQ.Sample.AspNetCore.Domains;
-using Liyanjie.FakeMQ.Sample.AspNetCore.Infrastructure.EntityConfigurations;
+﻿using Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure.EntityConfigurations;
+using Liyanjie.FakeMQ.Sample.Console.NetCore.Models;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace Liyanjie.FakeMQ.Sample.AspNetCore.Infrastructure
+namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
 {
-    public class SqliteContext : Microsoft.EntityFrameworkCore.DbContext
+    public class DataContext : Microsoft.EntityFrameworkCore.DbContext
     {
-        public SqliteContext(DbContextOptions<SqliteContext> options) : base(options) { }
+        public DataContext()
+            : base(new DbContextOptionsBuilder<DataContext>().UseSqlite(@"Data Source=.\Database.sqlite").Options)
+        { }
 
         public DbSet<FakeMQEvent> FakeMQEvents { get; set; }
         public DbSet<FakeMQProcess> FakeMQProcesses { get; set; }

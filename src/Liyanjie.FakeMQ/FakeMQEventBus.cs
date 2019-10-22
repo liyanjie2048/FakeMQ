@@ -17,6 +17,7 @@ namespace Liyanjie.FakeMQ
         readonly IFakeMQEventStore eventStore;
         readonly IFakeMQProcessStore processStore;
         readonly IDictionary<Type, Type> subscriptions = new Dictionary<Type, Type>();
+        readonly IDictionary<Type, object> handlerObjects = new Dictionary<Type, object>();
 
         /// <summary>
         /// 
@@ -33,9 +34,20 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="eventStore"></param>
+        /// <param name="processStore"></param>
+        public FakeMQEventBus(IFakeMQEventStore eventStore, IFakeMQProcessStore processStore)
+        {
+            this.eventStore = eventStore;
+            this.processStore = processStore;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <typeparam name="TEventMessage"></typeparam>
         /// <param name="message"></param>
-        public bool Publish<TEventMessage>(TEventMessage message)
+        public async Task<bool> PublishAsync<TEventMessage>(TEventMessage message)
             where TEventMessage : IFakeMQEventMessage
         {
             var @event = new FakeMQEvent
@@ -43,11 +55,7 @@ namespace Liyanjie.FakeMQ
                 Type = typeof(TEventMessage).FullName,
                 Message = FakeMQEvent.GetMsgString(message),
             };
-            if (TryExecute(() => eventStore.Add(@event)))
-            {
-                return true;
-            }
-            return false;
+            return await TryExecuteAsync(async () => await eventStore.AddAsync(@event));
         }
 
         /// <summary>
@@ -55,7 +63,7 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <typeparam name="TEventMessage"></typeparam>
         /// <typeparam name="TEventHandler"></typeparam>
-        public FakeMQEventBus Subscribe<TEventMessage, TEventHandler>()
+        public async Task SubscribeAsync<TEventMessage, TEventHandler>()
             where TEventMessage : IFakeMQEventMessage
             where TEventHandler : IFakeMQEventHandler<TEventMessage>
         {
@@ -63,7 +71,7 @@ namespace Liyanjie.FakeMQ
             var handlerType = typeof(TEventHandler);
             var subscriptionId = GetSubscriptionId(messageType, handlerType);
 
-            if (processStore.Add(new FakeMQProcess
+            if (await processStore.AddAsync(new FakeMQProcess
             {
                 Subscription = subscriptionId,
             }))
@@ -71,8 +79,6 @@ namespace Liyanjie.FakeMQ
                 if (!subscriptions.ContainsKey(handlerType))
                     subscriptions.Add(handlerType, messageType);
             }
-
-            return this;
         }
 
         /// <summary>
@@ -80,7 +86,34 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <typeparam name="TEventMessage"></typeparam>
         /// <typeparam name="TEventHandler"></typeparam>
-        public void Unsubscribe<TEventMessage, TEventHandler>()
+        public async Task SubscribeAsync<TEventMessage, TEventHandler>(TEventHandler handler = default)
+            where TEventMessage : IFakeMQEventMessage
+            where TEventHandler : IFakeMQEventHandler<TEventMessage>
+        {
+            var messageType = typeof(TEventMessage);
+            var handlerType = typeof(TEventHandler);
+            var subscriptionId = GetSubscriptionId(messageType, handlerType);
+
+            if (await processStore.AddAsync(new FakeMQProcess
+            {
+                Subscription = subscriptionId,
+            }))
+            {
+                if (!subscriptions.ContainsKey(handlerType))
+                {
+                    subscriptions.Add(handlerType, messageType);
+                    if (handler != null)
+                        handlerObjects.Add(handlerType, handler);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TEventMessage"></typeparam>
+        /// <typeparam name="TEventHandler"></typeparam>
+        public async Task UnsubscribeAsync<TEventMessage, TEventHandler>()
             where TEventMessage : IFakeMQEventMessage
             where TEventHandler : IFakeMQEventHandler<TEventMessage>
         {
@@ -91,10 +124,15 @@ namespace Liyanjie.FakeMQ
             if (subscriptions.ContainsKey(handlerType))
             {
                 subscriptions.Remove(handlerType);
-                TryExecute(() => processStore.Delete(subscriptionId));
+                await TryExecuteAsync(async () => await processStore.DeleteAsync(subscriptionId));
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stoppingToken"></param>
+        /// <returns></returns>
         public async Task ProcessAsync(CancellationToken stoppingToken)
         {
             var tasks = new List<Task>();
@@ -108,13 +146,19 @@ namespace Liyanjie.FakeMQ
                     var handlerType = subscription.Key;
                     var subscriptionId = GetSubscriptionId(messageType, handlerType);
 
-                    var timestamp = processStore.Get(subscriptionId)?.Timestamp ?? 0L;
+                    var timestamp = (await processStore.GetAsync(subscriptionId))?.Timestamp ?? 0L;
 
-                    var @event = eventStore.Get(messageType.FullName, timestamp);
+                    var @event = await eventStore.GetAsync(messageType.FullName, timestamp);
                     if (@event == null)
                         continue;
-
-                    var handler = serviceProvider.GetServiceOrCreateInstance(handlerType);
+                    var handler = handlerObjects.ContainsKey(handlerType)
+                        ? handlerObjects[handlerType]
+                        : serviceProvider == null ? Activator.CreateInstance(handlerType) :
+#if NET45
+                            serviceProvider.GetServiceOrCreateInstance(handlerType);
+#else
+                            Microsoft.Extensions.DependencyInjection.ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider, handlerType);
+#endif
                     if (handler == null)
                         continue;
 
@@ -124,7 +168,7 @@ namespace Liyanjie.FakeMQ
                         var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<IFakeMQEventMessage>.HandleAsync));
                         var result = await (Task<bool>)method.Invoke(handler, new[] { @event.GetMsgObject(messageType) });
                         if (result)
-                            TryExecute(() => processStore.Update(subscriptionId, @event.Timestamp));
+                            await TryExecuteAsync(async () => await processStore.UpdateAsync(subscriptionId, @event.Timestamp));
                     }));
                 }
 
@@ -134,10 +178,13 @@ namespace Liyanjie.FakeMQ
         }
 
         static string GetSubscriptionId(Type messageType, Type handlerType) => $"{messageType.FullName}>{handlerType.FullName}";
-        static bool TryExecute(Func<bool> func, int retryCount = 3)
+        static async Task<bool> TryExecuteAsync(Func<Task<bool>> func, int retryCount = 3)
         {
             if (func != null)
-                return Policy.HandleResult<bool>(false).Retry(retryCount).Execute(func);
+                return await Policy
+                    .HandleResult<Task<bool>>(task => task.Result == false)
+                    .Retry(retryCount)
+                    .Execute(func);
 
             return false;
         }

@@ -7,8 +7,8 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore.Infrastructure.EventHandlers
 {
     public class MessageEventHandler : IFakeMQEventHandler<MessageEvent>, IDisposable
     {
-        readonly SqliteContext context;
-        public MessageEventHandler(SqliteContext context)
+        readonly DataContext context;
+        public MessageEventHandler(DataContext context)
         {
             this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
@@ -20,11 +20,15 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore.Infrastructure.EventHandlers
 
         public async Task<bool> HandleAsync(MessageEvent @event)
         {
-            context.Messages.Add(new Message
+            try
             {
-                Content = @event.Message,
-            });
-            await context.SaveChangesAsync();
+                context.Messages.Add(new Message
+                {
+                    Content = @event.Message,
+                });
+                await context.SaveChangesAsync();
+            }
+            catch { }
 
             return true;
         }

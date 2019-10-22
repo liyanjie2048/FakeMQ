@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.29411.108
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{8A15A9D6-663B-4C81-BC6C-5743CB0B85EA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Liyanjie.FakeMQ.Core", "src\Liyanjie.FakeMQ.Core\Liyanjie.FakeMQ.Core.csproj", "{9CC3714D-5702-445C-BB5F-87F21D1B9F04}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Liyanjie.FakeMQ.AspNetCore", "src\Liyanjie.FakeMQ.AspNetCore\Liyanjie.FakeMQ.AspNetCore.csproj", "{6F1B362A-946F-4402-9063-DAF6B115650B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Liyanjie.FakeMQ", "src\Liyanjie.FakeMQ\Liyanjie.FakeMQ.csproj", "{F0907455-45DC-446C-A378-2A92D0DA13AB}"
@@ -25,10 +23,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{9CC3714D-5702-445C-BB5F-87F21D1B9F04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9CC3714D-5702-445C-BB5F-87F21D1B9F04}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9CC3714D-5702-445C-BB5F-87F21D1B9F04}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9CC3714D-5702-445C-BB5F-87F21D1B9F04}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6F1B362A-946F-4402-9063-DAF6B115650B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6F1B362A-946F-4402-9063-DAF6B115650B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F1B362A-946F-4402-9063-DAF6B115650B}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -54,7 +48,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{9CC3714D-5702-445C-BB5F-87F21D1B9F04} = {8A15A9D6-663B-4C81-BC6C-5743CB0B85EA}
 		{6F1B362A-946F-4402-9063-DAF6B115650B} = {8A15A9D6-663B-4C81-BC6C-5743CB0B85EA}
 		{F0907455-45DC-446C-A378-2A92D0DA13AB} = {8A15A9D6-663B-4C81-BC6C-5743CB0B85EA}
 		{5E40624B-253C-4241-9D4D-B2DA1C3CB768} = {027EBFBC-1217-4D73-806D-A62FC8AC543E}

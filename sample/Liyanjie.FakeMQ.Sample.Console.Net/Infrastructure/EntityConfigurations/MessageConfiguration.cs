@@ -8,8 +8,6 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure.EntityConfigurations
     {
         public MessageConfiguration()
         {
-            this.Property(_ => _.Content);
-
             this.HasKey(_ => _.Id);
         }
     }

@@ -5,12 +5,12 @@ using Liyanjie.FakeMQ.Sample.Console.Net.Models;
 
 namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure
 {
-    public class SqlCeContext : System.Data.Entity.DbContext
+    public class DataContext : System.Data.Entity.DbContext
     {
-        public SqlCeContext(string nameOrConnectionString)
+        public DataContext(string nameOrConnectionString)
             : base(nameOrConnectionString)
         {
-            Database.SetInitializer(new CreateDatabaseIfNotExists<SqlCeContext>());
+            Database.SetInitializer(new CreateDatabaseIfNotExists<DataContext>());
         }
 
         public IDbSet<FakeMQEvent> FakeMQEvents { get; set; }

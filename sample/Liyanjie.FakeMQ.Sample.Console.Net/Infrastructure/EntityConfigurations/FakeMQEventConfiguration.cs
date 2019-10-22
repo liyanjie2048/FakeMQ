@@ -6,7 +6,7 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure.EntityConfigurations
     {
         public FakeMQEventConfiguration()
         {
-            this.Property(_ => _.Type);
+            this.HasKey(_ => _.Id);
         }
     }
 }

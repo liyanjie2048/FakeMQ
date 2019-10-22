@@ -6,7 +6,7 @@
     Layout = null;
 
     var message = $"Action2:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}";
-    EventBus.Publish(new Liyanjie.FakeMQ.Sample.AspNetCore.Domains.MessageEvent { Message = message });
+    await EventBus.PublishAsync(new Liyanjie.FakeMQ.Sample.AspNetCore.Domains.MessageEvent { Message = message });
 }
 
 <!DOCTYPE html>

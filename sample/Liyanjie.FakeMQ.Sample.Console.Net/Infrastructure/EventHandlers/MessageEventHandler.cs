@@ -9,8 +9,8 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure.EventHandlers
 {
     public class MessageEventHandler : IFakeMQEventHandler<MessageEvent>, IDisposable
     {
-        readonly SqlCeContext context;
-        public MessageEventHandler(SqlCeContext context)
+        readonly DataContext context;
+        public MessageEventHandler(DataContext context)
         {
             this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
@@ -22,12 +22,15 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure.EventHandlers
 
         public async Task<bool> HandleAsync(MessageEvent @event)
         {
-            context.Messages.Add(new Message
+            try
             {
-                Content = @event.Message,
-            });
-            await context.SaveChangesAsync();
-
+                context.Messages.Add(new Message
+                {
+                    Content = @event.Message,
+                });
+                await context.SaveChangesAsync();
+            }
+            catch { }
             return true;
         }
     }

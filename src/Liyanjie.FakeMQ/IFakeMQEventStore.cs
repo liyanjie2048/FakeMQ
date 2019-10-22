@@ -1,4 +1,6 @@
-﻿namespace Liyanjie.FakeMQ
+﻿using System.Threading.Tasks;
+
+namespace Liyanjie.FakeMQ
 {
     /// <summary>
     /// 
@@ -10,7 +12,7 @@
         /// </summary>
         /// <param name="event"></param>
         /// <returns></returns>
-        bool Add(FakeMQEvent @event);
+        Task<bool> AddAsync(FakeMQEvent @event);
 
         /// <summary>
         /// 
@@ -18,6 +20,6 @@
         /// <param name="type"></param>
         /// <param name="timestamp"></param>
         /// <returns></returns>
-        FakeMQEvent Get(string type, long timestamp);
+        Task<FakeMQEvent> GetAsync(string type, long timestamp);
     }
 }

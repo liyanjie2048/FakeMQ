@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Data.Entity;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure
 {
     public class FakeMQEventStore : IFakeMQEventStore, IDisposable
     {
-        readonly SqlCeContext context;
-        public FakeMQEventStore(SqlCeContext context)
+        readonly DataContext context;
+        public FakeMQEventStore(DataContext context)
         {
             this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
@@ -17,25 +18,25 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure
             this.context?.Dispose();
         }
 
-        public bool Add(FakeMQEvent @event)
+        public async Task<bool> AddAsync(FakeMQEvent @event)
         {
             context.FakeMQEvents.Add(@event);
-            return Save();
+            return await SaveAsync();
         }
 
-        public FakeMQEvent Get(string type, long timestamp)
+        public async Task<FakeMQEvent> GetAsync(string type, long timestamp)
         {
-            return context.FakeMQEvents.AsNoTracking()
+            return await context.FakeMQEvents.AsNoTracking()
                 .Where(_ => _.Type == type && _.Timestamp > timestamp)
                 .OrderBy(_ => _.Timestamp)
-                .FirstOrDefault();
+                .FirstOrDefaultAsync();
         }
 
-        bool Save()
+        async Task<bool> SaveAsync()
         {
             try
             {
-                context.SaveChanges();
+                await context.SaveChangesAsync();
                 return true;
             }
             catch { }

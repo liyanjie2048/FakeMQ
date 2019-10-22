@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Configuration;
+using System.Data.Entity;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure;
 using Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure.EventHandlers;
 using Liyanjie.FakeMQ.Sample.Console.Net.Models;
-
-using Microsoft.Extensions.DependencyInjection;
 
 using Newtonsoft.Json;
 
@@ -16,18 +14,11 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net
 {
     class Program
     {
-        static void ConfigureServices(ServiceCollection services)
+        static async Task<bool> ShowMessagesAsync()
         {
-            services.AddScoped(sp => new SqlCeContext(ConfigurationManager.ConnectionStrings["SqlServerCe"].ConnectionString));
-
-            services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(JsonConvert.SerializeObject, JsonConvert.DeserializeObject);
-        }
-        static bool ShowMessages(IServiceProvider serviceProvider)
-        {
+            using var db = new DataContext(ConfigurationManager.ConnectionStrings["Sqlite"].ConnectionString);
             System.Console.WriteLine("################################");
-            using var scope = serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope();
-            using var context = scope.ServiceProvider.GetService<SqlCeContext>();
-            foreach (var item in context.Messages.ToList())
+            foreach (var item in await db.Messages.ToListAsync())
             {
                 System.Console.WriteLine($"{item.Id}=>{item.Content}");
             }
@@ -39,17 +30,15 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net
 
         static async Task Main(string[] args)
         {
-            var stoppingCts = new CancellationTokenSource();
-            var services = new ServiceCollection();
+            var db = new DataContext(ConfigurationManager.ConnectionStrings["Sqlite"].ConnectionString);
 
-            ConfigureServices(services);
+            FakeMQ.Serialize = JsonConvert.SerializeObject;
+            FakeMQ.Deserialize = JsonConvert.DeserializeObject;
 
-            var serviceProvider = services.BuildServiceProvider();
+            FakeMQ.Initialize(new FakeMQEventBus(new FakeMQEventStore(db), new FakeMQProcessStore(db)));
+            await FakeMQ.EventBus.SubscribeAsync<MessageEvent, MessageEventHandler>(new MessageEventHandler(db));
 
-            FakeMQ.Initialize(serviceProvider.GetService<FakeMQEventBus>());
-            FakeMQ.EventBus.Subscribe<MessageEvent, MessageEventHandler>();
-
-            await FakeMQ.StartAsync(stoppingCts.Token);
+            await FakeMQ.StartAsync();
 
             while (true)
             {
@@ -57,9 +46,9 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net
                 var input = System.Console.ReadLine();
                 var result = input switch
                 {
-                    "0" => ShowMessages(serviceProvider),
-                    "1" => FakeMQ.EventBus.Publish(new MessageEvent { Message = $"Action1:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" }),
-                    "2" => FakeMQ.EventBus.Publish(new MessageEvent { Message = $"Action2:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" }),
+                    "0" => await ShowMessagesAsync(),
+                    "1" => await FakeMQ.EventBus.PublishAsync(new MessageEvent { Message = $"Action1:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" }),
+                    "2" => await FakeMQ.EventBus.PublishAsync(new MessageEvent { Message = $"Action2:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" }),
                     "00" => false,
                     _ => true,
                 };

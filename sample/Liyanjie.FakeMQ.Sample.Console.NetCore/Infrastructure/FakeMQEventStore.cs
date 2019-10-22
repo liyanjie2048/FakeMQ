@@ -2,17 +2,14 @@
 using System.Linq;
 using System.Threading.Tasks;
 
-using Liyanjie.FakeMQ;
-
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
 {
     public class FakeMQEventStore : IFakeMQEventStore, IDisposable
     {
-        readonly SqliteContext context;
-        public FakeMQEventStore(SqliteContext context)
+        readonly DataContext context;
+        public FakeMQEventStore(DataContext context)
         {
             this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
@@ -22,24 +19,29 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
             this.context?.Dispose();
         }
 
-        public bool Add(FakeMQEvent @event)
+        public async Task<bool> AddAsync(FakeMQEvent @event)
         {
             context.FakeMQEvents.Add(@event);
-            return Save();
+            return await SaveAsync();
         }
 
-        public FakeMQEvent Get(string type, long timestamp)
+        public async Task<FakeMQEvent> GetAsync(string type, long timestamp)
         {
-            return context.FakeMQEvents.AsNoTracking()
+            return await context.FakeMQEvents.AsNoTracking()
                 .Where(_ => _.Type == type && _.Timestamp > timestamp)
                 .OrderBy(_ => _.Timestamp)
-                .FirstOrDefault();
+                .FirstOrDefaultAsync();
         }
 
-        bool Save()
+        async Task<bool> SaveAsync()
         {
-            context.SaveChanges();
-            return true;
+            try
+            {
+                await context.SaveChangesAsync();
+                return true;
+            }
+            catch { }
+            return false;
         }
     }
 }

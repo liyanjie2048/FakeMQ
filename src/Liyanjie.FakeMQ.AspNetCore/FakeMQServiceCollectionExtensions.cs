@@ -2,8 +2,6 @@
 
 using Liyanjie.FakeMQ;
 
-using Microsoft.Extensions.Logging;
-
 namespace Microsoft.Extensions.DependencyInjection
 {
     /// <summary>
@@ -26,22 +24,22 @@ namespace Microsoft.Extensions.DependencyInjection
             where TEventStore : class, IFakeMQEventStore
             where TProcessStore : class, IFakeMQProcessStore
         {
-            FakeMQDefaults.Serialize = jsonSerialize ?? throw new ArgumentNullException(nameof(jsonSerialize));
-            FakeMQDefaults.Deserialize = jsonDeserialize ?? throw new ArgumentNullException(nameof(jsonDeserialize));
+            FakeMQ.Serialize = jsonSerialize ?? throw new ArgumentNullException(nameof(jsonSerialize));
+            FakeMQ.Deserialize = jsonDeserialize ?? throw new ArgumentNullException(nameof(jsonDeserialize));
 
             services.AddTransient<IFakeMQEventStore, TEventStore>();
             services.AddTransient<IFakeMQProcessStore, TProcessStore>();
-            services.AddSingleton(serviceProvider => new FakeMQEventBus(
-#if NETSTANDARD2_0
-                serviceProvider.CreateScope().ServiceProvider
-#else
-                serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope().ServiceProvider
-#endif
-            ));
+            services.AddSingleton(serviceProvider =>
+            {
+                var eventBus = new FakeMQEventBus(serviceProvider.CreateScope().ServiceProvider);
 
-#if NETSTANDARD2_0
+                FakeMQ.Initialize(eventBus);
+
+                return eventBus;
+            });
+
             services.AddHostedService<FakeMQBackgroundService>();
-#endif
+
             return services;
         }
     }

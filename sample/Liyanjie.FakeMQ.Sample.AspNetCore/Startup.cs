@@ -16,7 +16,7 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddLogging();
-            services.AddDbContext<SqliteContext>(builder =>
+            services.AddDbContext<DataContext>(builder =>
             {
                 builder.UseSqlite(@"Data Source=.\Database.sqlite");
             });
@@ -34,8 +34,8 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore
             }
 
             var eventBus = app.ApplicationServices.GetRequiredService<FakeMQEventBus>();
-            eventBus.Subscribe<MessageEvent, MessageEventHandler>();
-            
+            eventBus.SubscribeAsync<MessageEvent, MessageEventHandler>().Wait();
+
             app.UseMvc();
         }
     }

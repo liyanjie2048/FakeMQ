@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Liyanjie.FakeMQ
 {
@@ -12,14 +13,14 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <param name="process"></param>
         /// <returns></returns>
-        bool Add(FakeMQProcess process);
+        Task<bool> AddAsync(FakeMQProcess process);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="subscription"></param>
         /// <returns></returns>
-        FakeMQProcess Get(string subscription);
+        Task<FakeMQProcess> GetAsync(string subscription);
 
         /// <summary>
         /// 
@@ -27,13 +28,13 @@ namespace Liyanjie.FakeMQ
         /// <param name="subscription"></param>
         /// <param name="timestamp"></param>
         /// <returns></returns>
-        bool Update(string subscription, long timestamp);
+        Task<bool> UpdateAsync(string subscription, long timestamp);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="subscription"></param>
         /// <returns></returns>
-        bool Delete(string subscription);
+        Task<bool> DeleteAsync(string subscription);
     }
 }
