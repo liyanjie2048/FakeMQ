@@ -16,7 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\Liyanjie.FakeMQ.AspNetCore\Liyanjie.FakeMQ.AspNetCore.csproj" />
+      <ProjectReference Include="..\..\src\Liyanjie.FakeMQ.Injectable\Liyanjie.FakeMQ.Injectable.csproj" />
     </ItemGroup>
 
 </Project>
