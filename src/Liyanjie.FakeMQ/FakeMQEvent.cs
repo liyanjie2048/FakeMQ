@@ -31,7 +31,6 @@ namespace Liyanjie.FakeMQ
             => FakeMQ.Deserialize(Message, messageType);
 
         internal static string GetMsgString<TEventMessage>(TEventMessage message)
-            where TEventMessage : IFakeMQEventMessage
             => FakeMQ.Serialize(message);
     }
 }

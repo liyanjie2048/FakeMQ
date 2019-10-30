@@ -7,7 +7,6 @@ namespace Liyanjie.FakeMQ
     /// </summary>
     /// <typeparam name="TEventMessage"></typeparam>
     public interface IFakeMQEventHandler<TEventMessage>
-        where TEventMessage : IFakeMQEventMessage
     {
         /// <summary>
         /// 

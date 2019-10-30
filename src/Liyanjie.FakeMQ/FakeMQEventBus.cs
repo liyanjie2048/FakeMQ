@@ -48,7 +48,6 @@ namespace Liyanjie.FakeMQ
         /// <typeparam name="TEventMessage"></typeparam>
         /// <param name="message"></param>
         public async Task<bool> PublishAsync<TEventMessage>(TEventMessage message)
-            where TEventMessage : IFakeMQEventMessage
         {
             var @event = new FakeMQEvent
             {
@@ -64,7 +63,6 @@ namespace Liyanjie.FakeMQ
         /// <typeparam name="TEventMessage"></typeparam>
         /// <typeparam name="TEventHandler"></typeparam>
         public async Task SubscribeAsync<TEventMessage, TEventHandler>()
-            where TEventMessage : IFakeMQEventMessage
             where TEventHandler : IFakeMQEventHandler<TEventMessage>
         {
             var messageType = typeof(TEventMessage);
@@ -87,7 +85,6 @@ namespace Liyanjie.FakeMQ
         /// <typeparam name="TEventMessage"></typeparam>
         /// <typeparam name="TEventHandler"></typeparam>
         public async Task SubscribeAsync<TEventMessage, TEventHandler>(TEventHandler handler = default)
-            where TEventMessage : IFakeMQEventMessage
             where TEventHandler : IFakeMQEventHandler<TEventMessage>
         {
             var messageType = typeof(TEventMessage);
@@ -114,7 +111,6 @@ namespace Liyanjie.FakeMQ
         /// <typeparam name="TEventMessage"></typeparam>
         /// <typeparam name="TEventHandler"></typeparam>
         public async Task UnsubscribeAsync<TEventMessage, TEventHandler>()
-            where TEventMessage : IFakeMQEventMessage
             where TEventHandler : IFakeMQEventHandler<TEventMessage>
         {
             var messageType = typeof(TEventMessage);
@@ -165,7 +161,7 @@ namespace Liyanjie.FakeMQ
                     tasks.Add(Task.Run(async () =>
                     {
                         var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
-                        var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<IFakeMQEventMessage>.HandleAsync));
+                        var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
                         var result = await (Task<bool>)method.Invoke(handler, new[] { @event.GetMsgObject(messageType) });
                         if (result)
                             await TryExecuteAsync(async () => await processStore.UpdateAsync(subscriptionId, @event.Timestamp));

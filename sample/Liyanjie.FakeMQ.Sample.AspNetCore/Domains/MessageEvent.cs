@@ -2,7 +2,7 @@
 
 namespace Liyanjie.FakeMQ.Sample.AspNetCore.Domains
 {
-    public class MessageEvent : IFakeMQEventMessage
+    public class MessageEvent
     {
         public string Message { get; set; }
     }

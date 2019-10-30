@@ -2,7 +2,7 @@
 
 namespace Liyanjie.FakeMQ.Sample.Console.Net.Models
 {
-    public class MessageEvent : IFakeMQEventMessage
+    public class MessageEvent
     {
         public string Message { get; set; }
     }
