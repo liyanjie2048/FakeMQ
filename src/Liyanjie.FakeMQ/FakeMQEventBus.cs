@@ -169,7 +169,6 @@ namespace Liyanjie.FakeMQ
                 }
 
                 await Task.WhenAll(tasks);
-                await Task.Delay(1000);
             }
         }
 
