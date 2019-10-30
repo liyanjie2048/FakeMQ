@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Liyanjie.FakeMQ.Sample.Cons
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Liyanjie.FakeMQ.Injectable", "src\Liyanjie.FakeMQ.Injectable\Liyanjie.FakeMQ.Injectable.csproj", "{D04998AB-968A-4DD5-B1EB-4A40A3082EE3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Liyanjie.FakeMQ.Sqlite.EFCore", "src\Liyanjie.FakeMQ.Sqlite.EFCore\Liyanjie.FakeMQ.Sqlite.EFCore.csproj", "{5B44F5DD-F81B-4A29-9C53-75C33165428A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,10 @@ Global
 		{D04998AB-968A-4DD5-B1EB-4A40A3082EE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D04998AB-968A-4DD5-B1EB-4A40A3082EE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D04998AB-968A-4DD5-B1EB-4A40A3082EE3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B44F5DD-F81B-4A29-9C53-75C33165428A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B44F5DD-F81B-4A29-9C53-75C33165428A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B44F5DD-F81B-4A29-9C53-75C33165428A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B44F5DD-F81B-4A29-9C53-75C33165428A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -53,6 +59,7 @@ Global
 		{F944FB06-6B0A-431A-AB67-9DAFACD583D7} = {027EBFBC-1217-4D73-806D-A62FC8AC543E}
 		{EC35BFD6-2FF7-4806-8B85-39443526D6EB} = {027EBFBC-1217-4D73-806D-A62FC8AC543E}
 		{D04998AB-968A-4DD5-B1EB-4A40A3082EE3} = {8A15A9D6-663B-4C81-BC6C-5743CB0B85EA}
+		{5B44F5DD-F81B-4A29-9C53-75C33165428A} = {8A15A9D6-663B-4C81-BC6C-5743CB0B85EA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B21ABA3C-EF0E-4A9E-BBD5-01D88C7A743F}
