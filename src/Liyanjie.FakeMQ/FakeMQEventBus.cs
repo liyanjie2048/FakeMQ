@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 #if NET45
 using NLog;
 #else
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 #endif
 
@@ -194,7 +195,7 @@ namespace Liyanjie.FakeMQ
 #if NET45
                             serviceProvider.GetServiceOrCreateInstance(handlerType);
 #else
-                            Microsoft.Extensions.DependencyInjection.ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider, handlerType);
+                            ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider.CreateScope().ServiceProvider, handlerType);
 #endif
                     if (handler == null)
                         continue;
