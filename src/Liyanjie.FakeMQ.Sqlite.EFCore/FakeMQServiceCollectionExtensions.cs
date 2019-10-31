@@ -1,6 +1,4 @@
-﻿using System;
-
-using Liyanjie.FakeMQ;
+﻿using Liyanjie.FakeMQ;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -17,11 +15,14 @@ namespace Microsoft.Extensions.DependencyInjection
         /// 
         /// </summary>
         /// <param name="services"></param>
-        /// <param name="optionsAction"></param>
+        /// <param name="connectionString"></param>
         /// <returns></returns>
-        public static IServiceCollection AddFakeMQSqliteEFCore(this IServiceCollection services, Action<DbContextOptionsBuilder> optionsAction)
+        public static IServiceCollection AddFakeMQSqliteEFCore(this IServiceCollection services, string connectionString = @"Database=.\FakeMQ.sqlite")
         {
-            services.AddDbContext<FakeMQContext>(optionsAction, ServiceLifetime.Singleton);
+            services.AddDbContext<FakeMQContext>(options =>
+            {
+                options.UseSqlite(connectionString);
+            }, ServiceLifetime.Singleton);
             services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(JsonConvert.SerializeObject, JsonConvert.DeserializeObject);
 
             return services;
