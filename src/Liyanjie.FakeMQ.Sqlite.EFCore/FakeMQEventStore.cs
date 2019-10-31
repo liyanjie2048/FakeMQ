@@ -62,11 +62,11 @@ namespace Liyanjie.FakeMQ
         /// <returns></returns>
         public async Task ClearAsync(long timestamp)
         {
-            var sql = $"DELETE FROM [FakeMQEvents] WHERE [Timestamp]<@timestamp";
+            var sql = $"DELETE FROM [FakeMQEvents] WHERE [Timestamp]<{timestamp}";
 #if NETSTANDARD2_0
-            context.Database.ExecuteSqlCommand(sql, timestamp);
+            context.Database.ExecuteSqlCommand(sql);
 #elif NETSTANDARD2_1
-            await context.Database.ExecuteSqlRawAsync(sql, timestamp);
+            await context.Database.ExecuteSqlRawAsync(sql);
 #endif
             await Task.CompletedTask;
         }

@@ -9,9 +9,6 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore.Infrastructure
     {
         public DataContext(DbContextOptions<DataContext> options) : base(options) { }
 
-        public DbSet<FakeMQEvent> FakeMQEvents { get; set; }
-        public DbSet<FakeMQProcess> FakeMQProcesses { get; set; }
-
         public DbSet<Message> Messages { get; set; }
 
 
@@ -19,8 +16,6 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore.Infrastructure
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.ApplyConfiguration(new FakeMQEventConfiguration());
-            modelBuilder.ApplyConfiguration(new FakeMQProcessConfiguration());
             modelBuilder.ApplyConfiguration(new MessageConfiguration());
         }
     }

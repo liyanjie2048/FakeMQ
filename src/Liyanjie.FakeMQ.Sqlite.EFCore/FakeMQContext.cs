@@ -18,6 +18,7 @@ namespace Liyanjie.FakeMQ
         /// 
         /// </summary>
         public DbSet<FakeMQEvent> FakeMQEvents { get; set; }
+
         /// <summary>
         /// 
         /// </summary>

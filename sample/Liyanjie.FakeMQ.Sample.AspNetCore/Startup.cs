@@ -7,8 +7,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-using Newtonsoft.Json;
-
 namespace Liyanjie.FakeMQ.Sample.AspNetCore
 {
     public class Startup
@@ -21,7 +19,7 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore
                 builder.UseSqlite(@"Data Source=.\Database.sqlite");
             });
 
-            services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(JsonConvert.SerializeObject, JsonConvert.DeserializeObject);
+            services.AddFakeMQSqliteEFCore();
 
             services.AddMvc();
         }
@@ -33,10 +31,10 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseMvc();
+
             var eventBus = app.ApplicationServices.GetRequiredService<FakeMQEventBus>();
             eventBus.SubscribeAsync<MessageEvent, MessageEventHandler>().Wait();
-
-            app.UseMvc();
         }
     }
 }

@@ -17,12 +17,12 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services"></param>
         /// <param name="connectionString"></param>
         /// <returns></returns>
-        public static IServiceCollection AddFakeMQSqliteEFCore(this IServiceCollection services, string connectionString = @"Database=.\FakeMQ.sqlite")
+        public static IServiceCollection AddFakeMQSqliteEFCore(this IServiceCollection services, string connectionString = @"Data Source=.\FakeMQ.sqlite")
         {
             services.AddDbContext<FakeMQContext>(options =>
             {
                 options.UseSqlite(connectionString);
-            }, ServiceLifetime.Singleton);
+            }, ServiceLifetime.Transient, ServiceLifetime.Singleton);
             services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(JsonConvert.SerializeObject, JsonConvert.DeserializeObject);
 
             return services;

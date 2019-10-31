@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Configuration;
 using System.Data.Entity;
-using System.Linq;
 using System.Threading.Tasks;
 
 using Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure;
@@ -16,7 +15,7 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net
     {
         static async Task<bool> ShowMessagesAsync()
         {
-            using var db = new DataContext(ConfigurationManager.ConnectionStrings["Sqlite"].ConnectionString);
+            using var db = GetDataContext();
             System.Console.WriteLine("################################");
             foreach (var item in await db.Messages.ToListAsync())
             {
@@ -27,16 +26,15 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net
 
             return true;
         }
+        static DataContext GetDataContext() => new DataContext(ConfigurationManager.ConnectionStrings["Sqlite"].ConnectionString);
 
         static async Task Main(string[] args)
         {
-            var db = new DataContext(ConfigurationManager.ConnectionStrings["Sqlite"].ConnectionString);
-
             FakeMQ.Serialize = JsonConvert.SerializeObject;
             FakeMQ.Deserialize = JsonConvert.DeserializeObject;
 
-            FakeMQ.Initialize(new FakeMQEventBus(new FakeMQEventStore(db), new FakeMQProcessStore(db)));
-            await FakeMQ.EventBus.SubscribeAsync<MessageEvent, MessageEventHandler>(new MessageEventHandler(db));
+            FakeMQ.Initialize(new FakeMQEventBus(() => new FakeMQEventStore(GetDataContext()), () => new FakeMQProcessStore(GetDataContext())));
+            await FakeMQ.EventBus.SubscribeAsync<MessageEvent, MessageEventHandler>(new MessageEventHandler(GetDataContext()));
 
             await FakeMQ.StartAsync();
 
@@ -44,16 +42,22 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net
             {
                 System.Console.WriteLine("INPUT:");
                 var input = System.Console.ReadLine();
-                var result = input switch
+                switch (input)
                 {
-                    "0" => await ShowMessagesAsync(),
-                    "1" => await FakeMQ.EventBus.PublishAsync(new MessageEvent { Message = $"Action1:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" }),
-                    "2" => await FakeMQ.EventBus.PublishAsync(new MessageEvent { Message = $"Action2:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" }),
-                    "00" => false,
-                    _ => true,
+                    case "0":
+                        await ShowMessagesAsync();
+                        break;
+                    case "1":
+                        await FakeMQ.EventBus.PublishAsync(new MessageEvent { Message = $"Action1:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" });
+                        break;
+                    case "2":
+                        await FakeMQ.EventBus.PublishAsync(new MessageEvent { Message = $"Action2:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" });
+                        break;
+                    case "00":
+                        return;
+                    default:
+                        break;
                 };
-                if (!result)
-                    break;
             }
         }
     }

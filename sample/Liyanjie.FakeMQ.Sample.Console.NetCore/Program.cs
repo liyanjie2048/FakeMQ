@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Linq;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure;
@@ -17,14 +15,8 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore
     {
         static void ConfigureServices(ServiceCollection services)
         {
-            services.AddDbContext<DataContext>();
-
-            services.AddTransient<IFakeMQEventStore, FakeMQEventStore>();
-            services.AddTransient<IFakeMQProcessStore, FakeMQProcessStore>();
-            services.AddSingleton(serviceProvider => new FakeMQEventBus(serviceProvider.CreateScope().ServiceProvider));
-
-            FakeMQ.Serialize = @object => JsonSerializer.Serialize(@object);
-            FakeMQ.Deserialize = (@string, type) => JsonSerializer.Deserialize(@string, type);
+            services.AddDbContext<DataContext>(ServiceLifetime.Transient, ServiceLifetime.Transient);
+            services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(@object => JsonSerializer.Serialize(@object), (@string, type) => JsonSerializer.Deserialize(@string, type));
         }
         static void InitializeDatabase(IServiceProvider serviceProvider)
         {
@@ -32,6 +24,12 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore
             using var context = scope.ServiceProvider.GetService<DataContext>();
             context.Database.EnsureCreated();
         }
+        static async Task ConfigureEventBusAsync(IServiceProvider serviceProvider)
+        {
+            var eventBus = serviceProvider.GetRequiredService<FakeMQEventBus>();
+            await eventBus.SubscribeAsync<MessageEvent, MessageEventHandler>();
+        }
+
         static async Task<bool> ShowMessagesAsync(IServiceProvider serviceProvider)
         {
             System.Console.WriteLine("################################");
@@ -56,24 +54,30 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore
 
             InitializeDatabase(serviceProvider);
 
-            FakeMQ.Initialize(serviceProvider.GetService<FakeMQEventBus>());
-            await FakeMQ.EventBus.SubscribeAsync<MessageEvent, MessageEventHandler>();
+            await ConfigureEventBusAsync(serviceProvider);
+
             await FakeMQ.StartAsync();
 
             while (true)
             {
                 System.Console.WriteLine("INPUT:");
                 var input = System.Console.ReadLine();
-                var result = input switch
+                switch (input)
                 {
-                    "0" => await ShowMessagesAsync(serviceProvider),
-                    "1" => await FakeMQ.EventBus.PublishAsync(new MessageEvent { Message = $"Action1:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" }),
-                    "2" => await FakeMQ.EventBus.PublishAsync(new MessageEvent { Message = $"Action2:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" }),
-                    "00" => false,
-                    _ => true,
+                    case "0":
+                        await ShowMessagesAsync(serviceProvider);
+                        break;
+                    case "1":
+                        await FakeMQ.EventBus.PublishAsync(new MessageEvent { Message = $"Action1:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" });
+                        break;
+                    case "2":
+                        await FakeMQ.EventBus.PublishAsync(new MessageEvent { Message = $"Action2:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" });
+                        break;
+                    case "00":
+                        return;
+                    default:
+                        break;
                 };
-                if (!result)
-                    break;
             }
         }
     }

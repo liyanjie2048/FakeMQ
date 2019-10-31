@@ -13,10 +13,11 @@
         <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.1.2" PrivateAssets="All" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.1.1" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.1" />
+        <PackageReference Include="NLog.Web.AspNetCore" Version="4.9.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Liyanjie.FakeMQ.Injectable\Liyanjie.FakeMQ.Injectable.csproj" />
+      <ProjectReference Include="..\..\src\Liyanjie.FakeMQ.Sqlite.EFCore\Liyanjie.FakeMQ.Sqlite.EFCore.csproj" />
     </ItemGroup>
 
 </Project>

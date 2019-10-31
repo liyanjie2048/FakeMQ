@@ -33,6 +33,17 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
                 .FirstOrDefaultAsync();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="timestamp"></param>
+        /// <returns></returns>
+        public async Task ClearAsync(long timestamp)
+        {
+            var sql = $"DELETE FROM [FakeMQEvents] WHERE [Timestamp]<{timestamp}";
+            await context.Database.ExecuteSqlRawAsync(sql);
+        }
+
         async Task<bool> SaveAsync()
         {
             try

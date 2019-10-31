@@ -31,7 +31,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddTransient<IFakeMQProcessStore, TProcessStore>();
             services.AddSingleton(serviceProvider =>
             {
-                var eventBus = new FakeMQEventBus(serviceProvider.CreateScope().ServiceProvider);
+                var eventBus = new FakeMQEventBus(serviceProvider);
 
                 FakeMQ.Initialize(eventBus);
 

@@ -12,6 +12,10 @@
         <RootNamespace>Liyanjie.FakeMQ</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+        <Content Include="FakeMQ.sqlite" />
+    </ItemGroup>
+
     <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
         <DocumentationFile>bin\Release\netstandard2.0\Liyanjie.FakeMQ.AspNetCore.xml</DocumentationFile>
     </PropertyGroup>
@@ -26,7 +30,7 @@
 
     <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
         <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.6" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.0.0" />
         <ProjectReference Include="..\Liyanjie.FakeMQ\Liyanjie.FakeMQ.csproj" />
         <ProjectReference Include="..\Liyanjie.FakeMQ.Injectable\Liyanjie.FakeMQ.Injectable.csproj" />
     </ItemGroup>
