@@ -1,8 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
+#if NET45
+using NLog;
+#else
+using Microsoft.Extensions.Logging;
+#endif
 
 using Polly;
 
@@ -14,6 +21,11 @@ namespace Liyanjie.FakeMQ
     public sealed class FakeMQEventBus
     {
         readonly IServiceProvider serviceProvider;
+#if NET45
+        readonly Logger logger;
+#else
+        readonly Microsoft.Extensions.Logging.ILogger<FakeMQEventBus> logger;
+#endif
         readonly IFakeMQEventStore eventStore;
         readonly IFakeMQProcessStore processStore;
         readonly IDictionary<Type, Type> subscriptions = new Dictionary<Type, Type>();
@@ -26,7 +38,11 @@ namespace Liyanjie.FakeMQ
         public FakeMQEventBus(IServiceProvider serviceProvider)
         {
             this.serviceProvider = serviceProvider;
-
+#if NET45
+            this.logger = LogManager.GetCurrentClassLogger();
+#else
+            this.logger = serviceProvider.GetService(typeof(ILogger<FakeMQEventBus>)) as ILogger<FakeMQEventBus>;
+#endif
             this.eventStore = serviceProvider.GetService(typeof(IFakeMQEventStore)) as IFakeMQEventStore;
             this.processStore = serviceProvider.GetService(typeof(IFakeMQProcessStore)) as IFakeMQProcessStore;
         }
@@ -51,7 +67,7 @@ namespace Liyanjie.FakeMQ
         {
             var @event = new FakeMQEvent
             {
-                Type = typeof(TEventMessage).FullName,
+                Type = typeof(TEventMessage).Name,
                 Message = FakeMQEvent.GetMsgString(message),
             };
             return await TryExecuteAsync(async () => await eventStore.AddAsync(@event));
@@ -131,18 +147,43 @@ namespace Liyanjie.FakeMQ
         /// <returns></returns>
         public async Task ProcessAsync(CancellationToken stoppingToken)
         {
+            _ = Task.Run(async () =>
+            {
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        var timestamp = long.MaxValue;
+                        foreach (var item in subscriptions.Select(_ => GetSubscriptionId(_.Value, _.Key)))
+                        {
+                            timestamp = Math.Min(timestamp, (await processStore.GetAsync(item)).Timestamp);
+                        }
+                        await eventStore.ClearAsync(timestamp);
+                    }
+                    catch (Exception ex)
+                    {
+#if NET45
+                        logger.Error(ex, "出错了");
+#else
+                        logger.LogError(default(EventId), ex, "出错了");
+#endif
+                    }
+
+                    await Task.Delay(TimeSpan.FromMinutes(10));
+                }
+            });
             var tasks = new List<Task>();
             while (!stoppingToken.IsCancellationRequested)
             {
                 tasks.Clear();
 
-                foreach (var subscription in subscriptions)
+                foreach (var item in subscriptions)
                 {
-                    var messageType = subscription.Value;
-                    var handlerType = subscription.Key;
+                    var messageType = item.Value;
+                    var handlerType = item.Key;
                     var subscriptionId = GetSubscriptionId(messageType, handlerType);
 
-                    var timestamp = (await processStore.GetAsync(subscriptionId))?.Timestamp ?? 0L;
+                    var timestamp = (await processStore.GetAsync(subscriptionId)).Timestamp;
 
                     var @event = await eventStore.GetAsync(messageType.FullName, timestamp);
                     if (@event == null)
@@ -169,6 +210,7 @@ namespace Liyanjie.FakeMQ
                 }
 
                 await Task.WhenAll(tasks);
+                await Task.Delay(TimeSpan.FromMilliseconds(100));
             }
         }
 

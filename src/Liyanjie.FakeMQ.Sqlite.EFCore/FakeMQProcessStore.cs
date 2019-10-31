@@ -51,7 +51,8 @@ namespace Liyanjie.FakeMQ
         /// <returns></returns>
         public async Task<FakeMQProcess> GetAsync(string subscription)
         {
-            return await context.FakeMQProcesses.AsNoTracking()
+            return await context.FakeMQProcesses
+                .AsNoTracking()
                 .SingleOrDefaultAsync(_ => _.Subscription == subscription);
         }
 
@@ -63,7 +64,9 @@ namespace Liyanjie.FakeMQ
         /// <returns></returns>
         public async Task<bool> UpdateAsync(string subscription, long timestamp)
         {
-            var item = await context.FakeMQProcesses.SingleOrDefaultAsync(_ => _.Subscription == subscription);
+            var item = await context.FakeMQProcesses
+                .AsTracking()
+                .SingleOrDefaultAsync(_ => _.Subscription == subscription);
             if (item == null)
                 return true;
 
@@ -79,7 +82,9 @@ namespace Liyanjie.FakeMQ
         /// <returns></returns>
         public async Task<bool> DeleteAsync(string subscription)
         {
-            var item = await context.FakeMQProcesses.SingleOrDefaultAsync(_ => _.Subscription == subscription);
+            var item = await context.FakeMQProcesses
+                .AsTracking()
+                .SingleOrDefaultAsync(_ => _.Subscription == subscription);
             if (item == null)
                 return true;
 

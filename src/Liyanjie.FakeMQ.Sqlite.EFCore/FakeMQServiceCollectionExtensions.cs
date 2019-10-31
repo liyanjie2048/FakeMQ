@@ -19,10 +19,10 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services"></param>
         /// <param name="optionsAction"></param>
         /// <returns></returns>
-        public static IServiceCollection AddFakeMQSqliteEFCore(this IServiceCollection services,Action<DbContextOptionsBuilder> optionsAction)
+        public static IServiceCollection AddFakeMQSqliteEFCore(this IServiceCollection services, Action<DbContextOptionsBuilder> optionsAction)
         {
             services.AddDbContext<FakeMQContext>(optionsAction, ServiceLifetime.Singleton);
-            services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(JsonConvert.SerializeObject,JsonConvert.DeserializeObject);
+            services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(JsonConvert.SerializeObject, JsonConvert.DeserializeObject);
 
             return services;
         }

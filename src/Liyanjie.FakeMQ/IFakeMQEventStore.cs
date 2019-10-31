@@ -21,5 +21,12 @@ namespace Liyanjie.FakeMQ
         /// <param name="timestamp"></param>
         /// <returns></returns>
         Task<FakeMQEvent> GetAsync(string type, long timestamp);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="timestamp"></param>
+        /// <returns></returns>
+        Task ClearAsync(long timestamp);
     }
 }
