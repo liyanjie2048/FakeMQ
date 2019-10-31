@@ -13,7 +13,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="FakeMQ.sqlite" />
+      <None Remove="FakeMQ.sqlite" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="FakeMQ.sqlite" />
     </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">

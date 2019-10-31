@@ -13,6 +13,15 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="eventBus"></param>
+        public FakeMQBackgroundService(FakeMQEventBus eventBus)
+        {
+            FakeMQ.Initialize(eventBus);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public Task StartAsync(CancellationToken cancellationToken) => FakeMQ.StartAsync();
