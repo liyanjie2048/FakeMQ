@@ -143,15 +143,11 @@ namespace Liyanjie.FakeMQ
                             timestamp = Math.Min(timestamp, (await _processStore.GetAsync(item)).Timestamp);
                         }
                         await EventStore.ClearAsync(timestamp);
+                        LogInformation($"清理事件。timestamp:{timestamp}.");
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex.Message);
-#if NET45
-                        logger.Error(ex, "出错了");
-#else
-                        logger.LogError(ex, "出错了");
-#endif
+                        LogError(ex, "出错了");
                     }
 
                     await Task.Delay(TimeSpan.FromMinutes(10));
@@ -160,8 +156,9 @@ namespace Liyanjie.FakeMQ
             var tasks = new List<Task>();
             while (!stoppingToken.IsCancellationRequested)
             {
+                LogInformation($"处理事件消息开始");
+               
                 tasks.Clear();
-
                 foreach (var item in subscriptions)
                 {
                     var messageType = item.Value;
@@ -182,7 +179,10 @@ namespace Liyanjie.FakeMQ
                             ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider.CreateScope().ServiceProvider, handlerType);
 #endif
                     if (handler == null)
+                    {
+                        LogWarning($"无法创建实例。handlerType:{handlerType.FullName}");
                         continue;
+                    }
 
                     tasks.Add(Task.Run(async () =>
                     {
@@ -195,8 +195,13 @@ namespace Liyanjie.FakeMQ
                 }
 
                 await Task.WhenAll(tasks);
-                await Task.Delay(TimeSpan.FromMilliseconds(100));
+
+                LogInformation($"处理事件消息完成");
+
+                await Task.Delay(TimeSpan.FromMilliseconds(200));
             }
+
+            LogWarning($"FakeMQ结束");
         }
 
         static string GetSubscriptionId(Type messageType, Type handlerType) => $"{messageType.Name}>{handlerType.FullName}";
@@ -209,6 +214,31 @@ namespace Liyanjie.FakeMQ
                     .Execute(func);
 
             return false;
+        }
+
+        void LogInformation(string message)
+        {
+#if NET45
+            logger.Info(message);
+#else
+            logger.LogInformation(message);
+#endif
+        }
+        void LogWarning(string message)
+        {
+#if NET45
+            logger.Warn(message);
+#else
+            logger.LogWarning(message);
+#endif
+        }
+        void LogError(Exception exception, string message)
+        {
+#if NET45
+            logger.Error(exception, message);
+#else
+            logger.LogError(exception, message);
+#endif
         }
     }
 }
