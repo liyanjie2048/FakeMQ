@@ -40,6 +40,7 @@ namespace Liyanjie.FakeMQ
 
             var fakeMQProcessTypeBuilder = modelBuilder.Entity<FakeMQProcess>();
             fakeMQProcessTypeBuilder.HasKey(_ => _.Subscription);
+            fakeMQProcessTypeBuilder.Property(_ => _.Subscription).HasMaxLength(50);
         }
     }
 }
