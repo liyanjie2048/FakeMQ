@@ -21,7 +21,14 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore_3_0
                 builder.UseSqlite(@"Data Source=.\Database.sqlite");
             });
 
-            services.AddFakeMQSqliteEFCore();
+            services.AddFakeMQWithEFCore(options =>
+            {
+                options.UseSqlite(@"Data Source=.\FakeMQ.sqlite", sqlite => sqlite.MigrationsAssembly(typeof(Startup).Assembly.FullName));
+            },
+            (db, timestamp) =>
+            {
+                return db.Database.ExecuteSqlRawAsync($"DELETE FROM [FakeMQEvents] WHERE [Timestamp]<{timestamp}");
+            });
 
             services.AddRazorPages();
         }

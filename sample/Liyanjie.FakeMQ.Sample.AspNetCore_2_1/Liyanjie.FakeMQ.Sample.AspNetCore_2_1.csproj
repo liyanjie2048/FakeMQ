@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Liyanjie.FakeMQ.Sqlite.EFCore\Liyanjie.FakeMQ.Sqlite.EFCore.csproj" />
+      <ProjectReference Include="..\..\src\Liyanjie.FakeMQ.EntityFrameworkCore\Liyanjie.FakeMQ.EntityFrameworkCore.csproj" />
     </ItemGroup>
 
 </Project>

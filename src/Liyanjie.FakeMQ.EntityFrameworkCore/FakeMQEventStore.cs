@@ -22,6 +22,8 @@ namespace Liyanjie.FakeMQ
             this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
+        internal static Func<FakeMQContext, long, Task> ClearEventStore { get; set; }
+
         /// <summary>
         /// 
         /// </summary>
@@ -62,13 +64,7 @@ namespace Liyanjie.FakeMQ
         /// <returns></returns>
         public async Task ClearAsync(long timestamp)
         {
-            var sql = $"DELETE FROM [FakeMQEvents] WHERE [Timestamp]<{timestamp}";
-#if NETSTANDARD2_0
-            context.Database.ExecuteSqlCommand(sql);
-#elif NETSTANDARD2_1
-            await context.Database.ExecuteSqlRawAsync(sql);
-#endif
-            await Task.CompletedTask;
+            await ClearEventStore?.Invoke(context, timestamp);
         }
 
         async Task<bool> SaveAsync()

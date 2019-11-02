@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0;netstandard2.1;</TargetFrameworks>
-        <Description>Liyanjie.FakeMQ.Sqlite.EFCore</Description>
+        <Description>Liyanjie.FakeMQ.EntityFrameworkCore</Description>
         <Copyright>© Liyanjie.me</Copyright>
         <Authors>liyanjie8712@outlook.com</Authors>
         <Company>Liyanjie.me</Company>
@@ -11,16 +11,6 @@
         <RepositoryType>Git</RepositoryType>
         <RootNamespace>Liyanjie.FakeMQ</RootNamespace>
     </PropertyGroup>
-
-    <ItemGroup>
-      <None Remove="FakeMQ.sqlite" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Content Include="FakeMQ.sqlite">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-    </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
         <DocumentationFile>bin\Release\netstandard2.0\Liyanjie.FakeMQ.AspNetCore.xml</DocumentationFile>
@@ -36,15 +26,13 @@
 
     <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
         <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.0.0" />
-        <ProjectReference Include="..\Liyanjie.FakeMQ\Liyanjie.FakeMQ.csproj" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.0.0" />
         <ProjectReference Include="..\Liyanjie.FakeMQ.Injectable\Liyanjie.FakeMQ.Injectable.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
         <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.0.0" />
-        <ProjectReference Include="..\Liyanjie.FakeMQ\Liyanjie.FakeMQ.csproj" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.0.0" />
         <ProjectReference Include="..\Liyanjie.FakeMQ.Injectable\Liyanjie.FakeMQ.Injectable.csproj" />
     </ItemGroup>
 

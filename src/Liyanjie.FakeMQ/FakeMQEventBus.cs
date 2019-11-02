@@ -130,10 +130,14 @@ namespace Liyanjie.FakeMQ
         /// <returns></returns>
         public async Task ProcessAsync(CancellationToken stoppingToken)
         {
+            LogInformation($"FakeMQ process start.");
+
             _ = Task.Run(async () =>
             {
                 while (!stoppingToken.IsCancellationRequested)
                 {
+                    await Task.Delay(TimeSpan.FromMinutes(5));
+
                     try
                     {
                         var timestamp = long.MaxValue;
@@ -143,21 +147,19 @@ namespace Liyanjie.FakeMQ
                             timestamp = Math.Min(timestamp, (await _processStore.GetAsync(item)).Timestamp);
                         }
                         await EventStore.ClearAsync(timestamp);
-                        LogInformation($"清理事件。timestamp:{timestamp}.");
+                        LogInformation($"Cleare event store at timestamp:{timestamp}.");
                     }
                     catch (Exception ex)
                     {
-                        LogError(ex, "出错了");
+                        LogError(ex, "Error when clear event store.");
                     }
-
-                    await Task.Delay(TimeSpan.FromMinutes(10));
                 }
             });
             var tasks = new List<Task>();
             while (!stoppingToken.IsCancellationRequested)
             {
-                LogInformation($"处理事件消息开始");
-               
+                LogTrace($"Handle event loop start.");
+
                 tasks.Clear();
                 foreach (var item in subscriptions)
                 {
@@ -172,15 +174,13 @@ namespace Liyanjie.FakeMQ
                         continue;
                     var handler = handlerObjects.ContainsKey(handlerType)
                         ? handlerObjects[handlerType]
-                        : serviceProvider == null ? Activator.CreateInstance(handlerType) :
-#if NET45
-                            serviceProvider.GetServiceOrCreateInstance(handlerType);
-#else
-                            ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider.CreateScope().ServiceProvider, handlerType);
-#endif
+                        : serviceProvider == null 
+                            ? Activator.CreateInstance(handlerType)
+                            : GetServiceOrCreateInstance(serviceProvider, handlerType);
+
                     if (handler == null)
                     {
-                        LogWarning($"无法创建实例。handlerType:{handlerType.FullName}");
+                        LogWarning($"Can not create instance of handlerType:{handlerType.FullName}.");
                         continue;
                     }
 
@@ -189,6 +189,9 @@ namespace Liyanjie.FakeMQ
                         var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
                         var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
                         var result = await (Task<bool>)method.Invoke(handler, new[] { @event.GetMsgObject(messageType) });
+                      
+                        LogTrace($"Handle result:{result}.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
+
                         if (result)
                             await TryExecuteAsync(async () => await ProcessStore.UpdateAsync(subscriptionId, @event.Timestamp));
                     }));
@@ -196,12 +199,12 @@ namespace Liyanjie.FakeMQ
 
                 await Task.WhenAll(tasks);
 
-                LogInformation($"处理事件消息完成");
+                LogTrace($"Handle event loop complte.");
 
                 await Task.Delay(TimeSpan.FromMilliseconds(200));
             }
 
-            LogWarning($"FakeMQ结束");
+            LogInformation($"FakeMQ process stop.");
         }
 
         static string GetSubscriptionId(Type messageType, Type handlerType) => $"{messageType.Name}>{handlerType.FullName}";
@@ -216,6 +219,22 @@ namespace Liyanjie.FakeMQ
             return false;
         }
 
+        object GetServiceOrCreateInstance(IServiceProvider serviceProvider, Type serviceType)
+        {
+#if NET45
+            return serviceProvider.GetServiceOrCreateInstance(serviceType);
+#else
+            return ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider.CreateScope().ServiceProvider, serviceType);
+#endif
+        }
+        void LogTrace(string message)
+        {
+#if NET45
+            logger.Trace(message);
+#else
+            logger.LogTrace(message);
+#endif
+        }
         void LogInformation(string message)
         {
 #if NET45

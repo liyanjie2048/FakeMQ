@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Liyanjie.FakeMQ.Sample.AspNetCore_2_1.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20191101153330_000")]
+    [Migration("20191102132358_000")]
     partial class _000
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
