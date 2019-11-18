@@ -30,6 +30,9 @@ namespace Liyanjie.FakeMQ
         readonly IDictionary<Type, Type> subscriptions = new Dictionary<Type, Type>();
         readonly IDictionary<Type, object> handlerObjects = new Dictionary<Type, object>();
 
+        readonly TimeSpan EventStoreCleaningLoopTimeSpan = TimeSpan.FromMinutes(5);
+        readonly TimeSpan EventHandlingLoopTimeSpan = TimeSpan.FromMilliseconds(100);
+
         /// <summary>
         /// 
         /// </summary>
@@ -62,6 +65,12 @@ namespace Liyanjie.FakeMQ
 
         IFakeMQEventStore EventStore => serviceProvider?.GetService(typeof(IFakeMQEventStore)) as IFakeMQEventStore ?? getEventStore();
         IFakeMQProcessStore ProcessStore => serviceProvider?.GetService(typeof(IFakeMQProcessStore)) as IFakeMQProcessStore ?? getProcessStore();
+
+        DateTime LastEventStoreCleanTime;
+        public bool EventStoreCleaningLoop => LastEventStoreCleanTime.Add(EventStoreCleaningLoopTimeSpan) < DateTime.Now;
+
+        DateTime LastEventHandleTime;
+        public bool EventHandlingLoop => LastEventHandleTime.Add(EventStoreCleaningLoopTimeSpan) < DateTime.Now;
 
         /// <summary>
         /// 
@@ -136,7 +145,7 @@ namespace Liyanjie.FakeMQ
             {
                 while (!stoppingToken.IsCancellationRequested)
                 {
-                    await Task.Delay(TimeSpan.FromMinutes(5));
+                    await Task.Delay(EventStoreCleaningLoopTimeSpan);
 
                     try
                     {
@@ -147,6 +156,8 @@ namespace Liyanjie.FakeMQ
                             timestamp = Math.Min(timestamp, (await _processStore.GetAsync(item)).Timestamp);
                         }
                         await EventStore.ClearAsync(timestamp);
+
+                        LastEventStoreCleanTime = DateTime.Now;
                         LogInformation($"Cleare event store at timestamp:{timestamp}.");
                     }
                     catch (Exception ex)
@@ -158,7 +169,7 @@ namespace Liyanjie.FakeMQ
             var tasks = new List<Task>();
             while (!stoppingToken.IsCancellationRequested)
             {
-                LogTrace($"Handle event loop start.");
+                LogDebug($"Event handling loop start.");
 
                 tasks.Clear();
                 foreach (var item in subscriptions)
@@ -174,7 +185,7 @@ namespace Liyanjie.FakeMQ
                         continue;
                     var handler = handlerObjects.ContainsKey(handlerType)
                         ? handlerObjects[handlerType]
-                        : serviceProvider == null 
+                        : serviceProvider == null
                             ? Activator.CreateInstance(handlerType)
                             : GetServiceOrCreateInstance(serviceProvider, handlerType);
 
@@ -186,11 +197,14 @@ namespace Liyanjie.FakeMQ
 
                     tasks.Add(Task.Run(async () =>
                     {
-                        var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
-                        var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
-                        var result = await (Task<bool>)method.Invoke(handler, new[] { @event.GetMsgObject(messageType) });
-                      
-                        LogTrace($"Handle result:{result}.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
+                        var result = await TryExecuteAsync(async () =>
+                        {
+                            var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
+                            var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
+                            return await (Task<bool>)method.Invoke(handler, new[] { @event.GetMsgObject(messageType) });
+                        });
+
+                        LogDebug($"Event handling result:{result}.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
 
                         if (result)
                             await TryExecuteAsync(async () => await ProcessStore.UpdateAsync(subscriptionId, @event.Timestamp));
@@ -199,40 +213,21 @@ namespace Liyanjie.FakeMQ
 
                 await Task.WhenAll(tasks);
 
-                LogTrace($"Handle event loop complte.");
+                LastEventHandleTime = DateTime.Now;
+                LogDebug($"Event handling loop complte.");
 
-                await Task.Delay(TimeSpan.FromMilliseconds(200));
+                await Task.Delay(EventHandlingLoopTimeSpan);
             }
 
             LogInformation($"FakeMQ process stop.");
         }
 
-        static string GetSubscriptionId(Type messageType, Type handlerType) => $"{messageType.Name}>{handlerType.FullName}";
-        static async Task<bool> TryExecuteAsync(Func<Task<bool>> func, int retryCount = 3)
-        {
-            if (func != null)
-                return await Policy
-                    .HandleResult<Task<bool>>(task => task.Result == false)
-                    .Retry(retryCount)
-                    .Execute(func);
-
-            return false;
-        }
-
-        object GetServiceOrCreateInstance(IServiceProvider serviceProvider, Type serviceType)
+        void LogDebug(string message)
         {
 #if NET45
-            return serviceProvider.GetServiceOrCreateInstance(serviceType);
+            logger.Debug(message);
 #else
-            return ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider.CreateScope().ServiceProvider, serviceType);
-#endif
-        }
-        void LogTrace(string message)
-        {
-#if NET45
-            logger.Trace(message);
-#else
-            logger.LogTrace(message);
+            logger.LogDebug(message);
 #endif
         }
         void LogInformation(string message)
@@ -257,6 +252,26 @@ namespace Liyanjie.FakeMQ
             logger.Error(exception, message);
 #else
             logger.LogError(exception, message);
+#endif
+        }
+
+        static string GetSubscriptionId(Type messageType, Type handlerType) => $"{messageType.Name}>{handlerType.FullName}";
+        static async Task<bool> TryExecuteAsync(Func<Task<bool>> func, int retryCount = 3)
+        {
+            if (func != null)
+                return await Policy
+                    .HandleResult<Task<bool>>(task => task.Result == false)
+                    .Retry(retryCount)
+                    .Execute(func);
+
+            return false;
+        }
+        static object GetServiceOrCreateInstance(IServiceProvider serviceProvider, Type serviceType)
+        {
+#if NET45
+            return serviceProvider.GetServiceOrCreateInstance(serviceType);
+#else
+            return ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider.CreateScope().ServiceProvider, serviceType);
 #endif
         }
     }

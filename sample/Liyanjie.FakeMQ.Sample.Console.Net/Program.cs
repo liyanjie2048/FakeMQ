@@ -13,7 +13,7 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net
 {
     class Program
     {
-        static async Task<bool> ShowMessagesAsync()
+        static async Task ShowMessagesAsync()
         {
             using var db = GetDataContext();
             System.Console.WriteLine("################################");
@@ -23,8 +23,6 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net
             }
             System.Console.WriteLine("################################");
             System.Console.WriteLine();
-
-            return true;
         }
         static DataContext GetDataContext() => new DataContext(ConfigurationManager.ConnectionStrings["Sqlite"].ConnectionString);
 
