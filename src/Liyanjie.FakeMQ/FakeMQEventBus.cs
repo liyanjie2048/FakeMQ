@@ -31,7 +31,7 @@ namespace Liyanjie.FakeMQ
         readonly IDictionary<Type, object> handlerObjects = new Dictionary<Type, object>();
 
         readonly TimeSpan EventStoreCleaningLoopTimeSpan = TimeSpan.FromMinutes(5);
-        readonly TimeSpan EventHandlingLoopTimeSpan = TimeSpan.FromMilliseconds(100);
+        readonly TimeSpan EventHandlingLoopTimeSpan = TimeSpan.FromMilliseconds(500);
 
         /// <summary>
         /// 
@@ -194,6 +194,7 @@ namespace Liyanjie.FakeMQ
                     var @event = await eventStore.GetAsync(messageType.Name, timestamp);
                     if (@event == null)
                         continue;
+
                     var handler = handlerObjects.ContainsKey(handlerType)
                         ? handlerObjects[handlerType]
                         : serviceProvider == null
@@ -206,23 +207,24 @@ namespace Liyanjie.FakeMQ
                         continue;
                     }
 
+                    bool result = false;
                     try
                     {
                         LogDebug($"Event handling begins.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
 
                         var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
                         var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
-                        var result = await (Task<bool>)method.Invoke(handler, new[] { @event.GetMsgObject(messageType) });
-
-                        if (result)
-                            await TryExecuteAsync(async () => await processStore.UpdateAsync(subscriptionId, @event.Timestamp));
-
-                        LogDebug($"Event handling result:{result}.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
+                        result = await (Task<bool>)method.Invoke(handler, new[] { @event.GetMsgObject(messageType) });
                     }
                     catch (Exception ex)
                     {
                         LogError(ex, $"Event handling error:{ex.Message}.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
                     }
+
+                    LogDebug($"Event handling result:{result}.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
+
+                    if (result)
+                        await TryExecuteAsync(async () => await processStore.UpdateAsync(subscriptionId, @event.Timestamp));
                 }
 
                 LogDebug($"Event handling loop complte.");
