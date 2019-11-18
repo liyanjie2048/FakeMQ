@@ -155,17 +155,17 @@ namespace Liyanjie.FakeMQ
                 {
                     await Task.Delay(EventStoreCleaningLoopTimeSpan);
 
+                    using var processStore = getProcessStore();
+                    using var eventStore = getEventStore();
                     try
                     {
                         var timestamp = long.MaxValue;
 
-                        using var processStore = getProcessStore();
                         foreach (var item in subscriptions.Select(_ => GetSubscriptionId(_.Value, _.Key)))
                         {
                             timestamp = Math.Min(timestamp, (await processStore.GetAsync(item)).Timestamp);
                         }
 
-                        using var eventStore = getEventStore();
                         await eventStore.ClearAsync(timestamp);
 
                         LogInformation($"Cleare event store at timestamp:{timestamp}.");
@@ -177,12 +177,12 @@ namespace Liyanjie.FakeMQ
                 }
             });
 
-            using var processStore = getProcessStore();
-            using var eventStore = getEventStore();
             while (!stoppingToken.IsCancellationRequested)
             {
                 LogDebug($"Event handling loop start.");
 
+                using var processStore = getProcessStore();
+                using var eventStore = getEventStore();
                 foreach (var item in subscriptions)
                 {
                     var messageType = item.Value;

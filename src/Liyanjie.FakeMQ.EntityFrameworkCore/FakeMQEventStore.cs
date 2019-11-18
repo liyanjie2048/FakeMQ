@@ -9,7 +9,7 @@ namespace Liyanjie.FakeMQ
     /// <summary>
     /// 
     /// </summary>
-    public class FakeMQEventStore : IFakeMQEventStore, IDisposable
+    public class FakeMQEventStore : IFakeMQEventStore
     {
         readonly FakeMQContext context;
 
