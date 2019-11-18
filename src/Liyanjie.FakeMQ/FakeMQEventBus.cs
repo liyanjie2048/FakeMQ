@@ -38,10 +38,15 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <param name="serviceProvider"></param>
         public FakeMQEventBus(IServiceProvider serviceProvider)
-            : this(() => serviceProvider?.GetService(typeof(IFakeMQEventStore)) as IFakeMQEventStore,
-                 () => serviceProvider?.GetService(typeof(IFakeMQProcessStore)) as IFakeMQProcessStore)
         {
             this.serviceProvider = serviceProvider;
+#if NET45
+            this.logger = LogManager.GetCurrentClassLogger();
+#else
+            this.logger = serviceProvider.GetService(typeof(ILogger<FakeMQEventBus>)) as ILogger<FakeMQEventBus>;
+#endif
+            this.getEventStore = () => this.serviceProvider?.GetService(typeof(IFakeMQEventStore)) as IFakeMQEventStore;
+            this.getProcessStore = () => this.serviceProvider?.GetService(typeof(IFakeMQProcessStore)) as IFakeMQProcessStore;
         }
 
         readonly Func<IFakeMQEventStore> getEventStore;
@@ -53,16 +58,19 @@ namespace Liyanjie.FakeMQ
         /// <param name="getEventStore"></param>
         /// <param name="getProcessStore"></param>
         public FakeMQEventBus(
+#if !NET45
+            Func<ILogger<FakeMQEventBus>> getLogger,
+#endif
             Func<IFakeMQEventStore> getEventStore,
             Func<IFakeMQProcessStore> getProcessStore)
         {
-            this.getEventStore = getEventStore;
-            this.getProcessStore = getProcessStore;
 #if NET45
             this.logger = LogManager.GetCurrentClassLogger();
 #else
-            this.logger = serviceProvider.GetService(typeof(ILogger<FakeMQEventBus>)) as ILogger<FakeMQEventBus>;
+            this.logger = getLogger?.Invoke();
 #endif
+            this.getEventStore = getEventStore;
+            this.getProcessStore = getProcessStore;
         }
 
         /// <summary>
@@ -228,33 +236,33 @@ namespace Liyanjie.FakeMQ
         void LogDebug(string message)
         {
 #if NET45
-            logger.Debug(message);
+            logger?.Debug(message);
 #else
-            logger.LogDebug(message);
+            logger?.LogDebug(message);
 #endif
         }
         void LogInformation(string message)
         {
 #if NET45
-            logger.Info(message);
+            logger?.Info(message);
 #else
-            logger.LogInformation(message);
+            logger?.LogInformation(message);
 #endif
         }
         void LogWarning(string message)
         {
 #if NET45
-            logger.Warn(message);
+            logger?.Warn(message);
 #else
-            logger.LogWarning(message);
+            logger?.LogWarning(message);
 #endif
         }
         void LogError(Exception exception, string message)
         {
 #if NET45
-            logger.Error(exception, message);
+            logger?.Error(exception, message);
 #else
-            logger.LogError(exception, message);
+            logger?.LogError(exception, message);
 #endif
         }
 
