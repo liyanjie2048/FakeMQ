@@ -1,11 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace Liyanjie.FakeMQ
 {
     /// <summary>
     /// 
     /// </summary>
-    public interface IFakeMQEventStore
+    public interface IFakeMQEventStore : IDisposable
     {
         /// <summary>
         /// 

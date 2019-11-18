@@ -38,13 +38,10 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <param name="serviceProvider"></param>
         public FakeMQEventBus(IServiceProvider serviceProvider)
+            : this(() => serviceProvider?.GetService(typeof(IFakeMQEventStore)) as IFakeMQEventStore,
+                 () => serviceProvider?.GetService(typeof(IFakeMQProcessStore)) as IFakeMQProcessStore)
         {
             this.serviceProvider = serviceProvider;
-#if NET45
-            this.logger = LogManager.GetCurrentClassLogger();
-#else
-            this.logger = serviceProvider.GetService(typeof(ILogger<FakeMQEventBus>)) as ILogger<FakeMQEventBus>;
-#endif
         }
 
         readonly Func<IFakeMQEventStore> getEventStore;
@@ -61,16 +58,12 @@ namespace Liyanjie.FakeMQ
         {
             this.getEventStore = getEventStore;
             this.getProcessStore = getProcessStore;
+#if NET45
+            this.logger = LogManager.GetCurrentClassLogger();
+#else
+            this.logger = serviceProvider.GetService(typeof(ILogger<FakeMQEventBus>)) as ILogger<FakeMQEventBus>;
+#endif
         }
-
-        IFakeMQEventStore EventStore => serviceProvider?.GetService(typeof(IFakeMQEventStore)) as IFakeMQEventStore ?? getEventStore();
-        IFakeMQProcessStore ProcessStore => serviceProvider?.GetService(typeof(IFakeMQProcessStore)) as IFakeMQProcessStore ?? getProcessStore();
-
-        DateTime LastEventStoreCleanTime;
-        public bool EventStoreCleaningLoop => LastEventStoreCleanTime.Add(EventStoreCleaningLoopTimeSpan) < DateTime.Now;
-
-        DateTime LastEventHandleTime;
-        public bool EventHandlingLoop => LastEventHandleTime.Add(EventStoreCleaningLoopTimeSpan) < DateTime.Now;
 
         /// <summary>
         /// 
@@ -84,7 +77,11 @@ namespace Liyanjie.FakeMQ
                 Type = typeof(TEventMessage).Name,
                 Message = FakeMQEvent.GetMsgString(message),
             };
-            await TryExecuteAsync(async () => await EventStore.AddAsync(@event));
+            await TryExecuteAsync(async () =>
+            {
+                using var eventStore = getEventStore();
+                return await eventStore.AddAsync(@event);
+            });
         }
 
         /// <summary>
@@ -99,7 +96,8 @@ namespace Liyanjie.FakeMQ
             var handlerType = typeof(TEventHandler);
             var subscriptionId = GetSubscriptionId(messageType, handlerType);
 
-            if (await ProcessStore.AddAsync(new FakeMQProcess
+            using var processStore = getProcessStore();
+            if (await processStore.AddAsync(new FakeMQProcess
             {
                 Subscription = subscriptionId,
             }))
@@ -128,7 +126,9 @@ namespace Liyanjie.FakeMQ
             if (subscriptions.ContainsKey(handlerType))
             {
                 subscriptions.Remove(handlerType);
-                await TryExecuteAsync(async () => await ProcessStore.DeleteAsync(subscriptionId));
+
+                using var processStore = getProcessStore();
+                await TryExecuteAsync(async () => await processStore.DeleteAsync(subscriptionId));
             }
         }
 
@@ -150,14 +150,16 @@ namespace Liyanjie.FakeMQ
                     try
                     {
                         var timestamp = long.MaxValue;
-                        var _processStore = ProcessStore;
+
+                        using var processStore = getProcessStore();
                         foreach (var item in subscriptions.Select(_ => GetSubscriptionId(_.Value, _.Key)))
                         {
-                            timestamp = Math.Min(timestamp, (await _processStore.GetAsync(item)).Timestamp);
+                            timestamp = Math.Min(timestamp, (await processStore.GetAsync(item)).Timestamp);
                         }
-                        await EventStore.ClearAsync(timestamp);
 
-                        LastEventStoreCleanTime = DateTime.Now;
+                        using var eventStore = getEventStore();
+                        await eventStore.ClearAsync(timestamp);
+
                         LogInformation($"Cleare event store at timestamp:{timestamp}.");
                     }
                     catch (Exception ex)
@@ -166,21 +168,22 @@ namespace Liyanjie.FakeMQ
                     }
                 }
             });
-            var tasks = new List<Task>();
+
+            using var processStore = getProcessStore();
+            using var eventStore = getEventStore();
             while (!stoppingToken.IsCancellationRequested)
             {
                 LogDebug($"Event handling loop start.");
 
-                tasks.Clear();
                 foreach (var item in subscriptions)
                 {
                     var messageType = item.Value;
                     var handlerType = item.Key;
                     var subscriptionId = GetSubscriptionId(messageType, handlerType);
 
-                    var timestamp = (await ProcessStore.GetAsync(subscriptionId)).Timestamp;
+                    var timestamp = (await processStore.GetAsync(subscriptionId)).Timestamp;
 
-                    var @event = await EventStore.GetAsync(messageType.Name, timestamp);
+                    var @event = await eventStore.GetAsync(messageType.Name, timestamp);
                     if (@event == null)
                         continue;
                     var handler = handlerObjects.ContainsKey(handlerType)
@@ -195,25 +198,25 @@ namespace Liyanjie.FakeMQ
                         continue;
                     }
 
-                    tasks.Add(Task.Run(async () =>
+                    try
                     {
-                        var result = await TryExecuteAsync(async () =>
-                        {
-                            var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
-                            var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
-                            return await (Task<bool>)method.Invoke(handler, new[] { @event.GetMsgObject(messageType) });
-                        });
+                        LogDebug($"Event handling begins.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
 
-                        LogDebug($"Event handling result:{result}.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
+                        var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
+                        var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
+                        var result = await (Task<bool>)method.Invoke(handler, new[] { @event.GetMsgObject(messageType) });
 
                         if (result)
-                            await TryExecuteAsync(async () => await ProcessStore.UpdateAsync(subscriptionId, @event.Timestamp));
-                    }));
+                            await TryExecuteAsync(async () => await processStore.UpdateAsync(subscriptionId, @event.Timestamp));
+
+                        LogDebug($"Event handling result:{result}.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
+                    }
+                    catch (Exception ex)
+                    {
+                        LogError(ex, $"Event handling error:{ex.Message}.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
+                    }
                 }
 
-                await Task.WhenAll(tasks);
-
-                LastEventHandleTime = DateTime.Now;
                 LogDebug($"Event handling loop complte.");
 
                 await Task.Delay(EventHandlingLoopTimeSpan);
