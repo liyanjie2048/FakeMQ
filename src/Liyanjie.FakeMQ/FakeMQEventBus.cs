@@ -148,24 +148,22 @@ namespace Liyanjie.FakeMQ
                 {
                     await Task.Delay(options.EventStoreCleaningLoopTimeSpan);
 
+                    var timestamp = long.MaxValue;
                     using var processStore = options.GetProcessStore(serviceProvider);
+                    foreach (var item in subscriptions.Select(_ => GetSubscriptionId(_.Value, _.Key)))
+                    {
+                        timestamp = Math.Min(timestamp, (await processStore.GetAsync(item)).Timestamp);
+                    }
+
+                    LogInformation($"Clean events at timestamp:{timestamp}.");
                     using var eventStore = options.GetEventStore(serviceProvider);
                     try
                     {
-                        var timestamp = long.MaxValue;
-
-                        foreach (var item in subscriptions.Select(_ => GetSubscriptionId(_.Value, _.Key)))
-                        {
-                            timestamp = Math.Min(timestamp, (await processStore.GetAsync(item)).Timestamp);
-                        }
-
-                        await eventStore.ClearAsync(timestamp);
-
-                        LogInformation($"Cleare event store at timestamp:{timestamp}.");
+                        await eventStore.CleanAsync(timestamp);
                     }
                     catch (Exception ex)
                     {
-                        LogError(ex, "Error when clear event store.");
+                        LogError(ex, "Error when clean events.");
                     }
                 }
             });

@@ -25,7 +25,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Action<FakeMQOptions> configureFakeMQOptions,
             Func<FakeMQContext, long, Task> clearEventStore = null)
         {
-            FakeMQEventStore.ClearEventStore = clearEventStore;
+            FakeMQEventStore.CleanEventStore = clearEventStore;
             services.AddDbContext<FakeMQContext>(configureDbContextOptions, ServiceLifetime.Transient, ServiceLifetime.Singleton);
             services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(configureFakeMQOptions);
 

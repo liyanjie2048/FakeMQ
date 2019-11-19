@@ -28,6 +28,6 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <param name="timestamp"></param>
         /// <returns></returns>
-        Task ClearAsync(long timestamp);
+        Task CleanAsync(long timestamp);
     }
 }
