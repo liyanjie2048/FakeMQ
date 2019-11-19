@@ -66,6 +66,9 @@ namespace Liyanjie.FakeMQ
             this.options = options;
         }
 
+        public DateTimeOffset LastEventCleaningLoopTime { get; private set; }
+        public DateTimeOffset LastEventHandlingLoopTime { get; private set; }
+
         /// <summary>
         /// 
         /// </summary>
@@ -147,6 +150,7 @@ namespace Liyanjie.FakeMQ
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     await Task.Delay(options.EventStoreCleaningLoopTimeSpan);
+                    LastEventCleaningLoopTime = DateTimeOffset.Now;
 
                     var timestamp = long.MaxValue;
                     using var processStore = options.GetProcessStore(serviceProvider);
@@ -156,6 +160,7 @@ namespace Liyanjie.FakeMQ
                     }
 
                     LogInformation($"Clean events at timestamp:{timestamp}.");
+
                     using var eventStore = options.GetEventStore(serviceProvider);
                     try
                     {
@@ -176,6 +181,8 @@ namespace Liyanjie.FakeMQ
                 using var eventStore = options.GetEventStore(serviceProvider);
                 foreach (var item in subscriptions)
                 {
+                    LastEventHandlingLoopTime = DateTimeOffset.Now;
+
                     var messageType = item.Value;
                     var handlerType = item.Key;
                     var subscriptionId = GetSubscriptionId(messageType, handlerType);
