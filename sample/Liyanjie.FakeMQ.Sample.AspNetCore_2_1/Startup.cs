@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 
 namespace Liyanjie.FakeMQ.Sample.AspNetCore_2_1
 {
@@ -22,8 +23,11 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore_2_1
             services.AddFakeMQWithEFCore(options =>
             {
                 options.UseSqlite(@"Data Source=.\FakeMQ.sqlite", sqlite => sqlite.MigrationsAssembly(typeof(Startup).Assembly.FullName));
-            },
-            (db, timestamp) =>
+            }, options =>
+            {
+                options.Serialize = JsonConvert.SerializeObject;
+                options.Deserialize = JsonConvert.DeserializeObject;
+            }, (db, timestamp) =>
             {
                 return db.Database.ExecuteSqlCommandAsync($"DELETE FROM [FakeMQEvents] WHERE [Timestamp]<{timestamp}");
             });

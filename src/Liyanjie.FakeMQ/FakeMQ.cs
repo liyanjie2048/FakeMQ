@@ -21,16 +21,6 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 
         /// </summary>
-        public static Func<object, string> Serialize { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public static Func<string, Type, object> Deserialize { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="eventBus"></param>
         public static void Initialize(FakeMQEventBus eventBus)
         {

@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using Liyanjie.FakeMQ.Sample.AspNetCore_3_0.Domains;
 using Liyanjie.FakeMQ.Sample.AspNetCore_3_0.Infrastructure;
 using Liyanjie.FakeMQ.Sample.AspNetCore_3_0.Infrastructure.EventHandlers;
@@ -24,8 +26,11 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore_3_0
             services.AddFakeMQWithEFCore(options =>
             {
                 options.UseSqlite(@"Data Source=.\FakeMQ.sqlite", sqlite => sqlite.MigrationsAssembly(typeof(Startup).Assembly.FullName));
-            },
-            (db, timestamp) =>
+            }, options =>
+            {
+                options.Serialize = @object => JsonSerializer.Serialize(@object);
+                options.Deserialize = (@string, type) => JsonSerializer.Deserialize(@string, type);
+            }, (db, timestamp) =>
             {
                 return db.Database.ExecuteSqlRawAsync($"DELETE FROM [FakeMQEvents] WHERE [Timestamp]<{timestamp}");
             });

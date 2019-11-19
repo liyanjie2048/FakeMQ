@@ -28,10 +28,13 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net
 
         static async Task Main(string[] args)
         {
-            FakeMQ.Serialize = JsonConvert.SerializeObject;
-            FakeMQ.Deserialize = JsonConvert.DeserializeObject;
-
-            FakeMQ.Initialize(new FakeMQEventBus(() => new FakeMQEventStore(GetDataContext()), () => new FakeMQProcessStore(GetDataContext())));
+            FakeMQ.Initialize(new FakeMQEventBus(new FakeMQOptions
+            {
+                Serialize = JsonConvert.SerializeObject,
+                Deserialize = JsonConvert.DeserializeObject,
+                GetEventStore = serviceProvider => new FakeMQEventStore(GetDataContext()),
+                GetProcessStore = serviceProvider => new FakeMQProcessStore(GetDataContext())
+            }));
             await FakeMQ.EventBus.SubscribeAsync<MessageEvent, MessageEventHandler>(new MessageEventHandler(GetDataContext()));
 
             await FakeMQ.StartAsync();

@@ -15,20 +15,15 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <typeparam name="TEventStore"></typeparam>
         /// <typeparam name="TProcessStore"></typeparam>
         /// <param name="services"></param>
-        /// <param name="jsonSerialize"></param>
-        /// <param name="jsonDeserialize"></param>
+        /// <param name="configureOptions"></param>
         /// <returns></returns>
-        public static IServiceCollection AddFakeMQ<TEventStore, TProcessStore>(this IServiceCollection services,
-            Func<object, string> jsonSerialize,
-            Func<string, Type, object> jsonDeserialize)
+        public static IServiceCollection AddFakeMQ<TEventStore, TProcessStore>(this IServiceCollection services,Action<FakeMQOptions> configureOptions)
             where TEventStore : class, IFakeMQEventStore
             where TProcessStore : class, IFakeMQProcessStore
         {
-            FakeMQ.Serialize = jsonSerialize ?? throw new ArgumentNullException(nameof(jsonSerialize));
-            FakeMQ.Deserialize = jsonDeserialize ?? throw new ArgumentNullException(nameof(jsonDeserialize));
-
             services.AddTransient<IFakeMQEventStore, TEventStore>();
             services.AddTransient<IFakeMQProcessStore, TProcessStore>();
+            services.Configure(configureOptions);
             services.AddSingleton(serviceProvider =>
             {
                 var eventBus = new FakeMQEventBus(serviceProvider);

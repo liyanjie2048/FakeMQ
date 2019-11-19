@@ -5,8 +5,6 @@ using Liyanjie.FakeMQ;
 
 using Microsoft.EntityFrameworkCore;
 
-using Newtonsoft.Json;
-
 namespace Microsoft.Extensions.DependencyInjection
 {
     /// <summary>
@@ -18,16 +16,18 @@ namespace Microsoft.Extensions.DependencyInjection
         /// 
         /// </summary>
         /// <param name="services"></param>
-        /// <param name="configureOptions"></param>
+        /// <param name="configureDbContextOptions"></param>
+        /// <param name="configureFakeMQOptions"></param>
         /// <param name="clearEventStore"></param>
         /// <returns></returns>
         public static IServiceCollection AddFakeMQWithEFCore(this IServiceCollection services,
-            Action<DbContextOptionsBuilder> configureOptions,
-            Func<FakeMQContext, long, Task> clearEventStore)
+            Action<DbContextOptionsBuilder> configureDbContextOptions,
+            Action<FakeMQOptions> configureFakeMQOptions,
+            Func<FakeMQContext, long, Task> clearEventStore = null)
         {
             FakeMQEventStore.ClearEventStore = clearEventStore;
-            services.AddDbContext<FakeMQContext>(configureOptions, ServiceLifetime.Transient, ServiceLifetime.Singleton);
-            services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(JsonConvert.SerializeObject, JsonConvert.DeserializeObject);
+            services.AddDbContext<FakeMQContext>(configureDbContextOptions, ServiceLifetime.Transient, ServiceLifetime.Singleton);
+            services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(configureFakeMQOptions);
 
             return services;
         }

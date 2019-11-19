@@ -16,7 +16,13 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore
         static void ConfigureServices(ServiceCollection services)
         {
             services.AddDbContext<DataContext>(ServiceLifetime.Transient, ServiceLifetime.Transient);
-            services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(@object => JsonSerializer.Serialize(@object), (@string, type) => JsonSerializer.Deserialize(@string, type));
+            services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(options =>
+            {
+                options.Serialize = @object => JsonSerializer.Serialize(@object);
+                options.Deserialize = (@string, type) => JsonSerializer.Deserialize(@string, type);
+                options.GetEventStore = serviceProvider => serviceProvider.GetRequiredService<IFakeMQEventStore>();
+                options.GetProcessStore = serviceProvider => serviceProvider.GetRequiredService<IFakeMQProcessStore>();
+            });
         }
         static void InitializeDatabase(IServiceProvider serviceProvider)
         {

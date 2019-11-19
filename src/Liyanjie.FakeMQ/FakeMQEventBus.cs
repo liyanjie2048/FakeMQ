@@ -10,6 +10,7 @@ using NLog;
 #else
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 #endif
 
 using Polly;
@@ -21,18 +22,17 @@ namespace Liyanjie.FakeMQ
     /// </summary>
     public sealed class FakeMQEventBus
     {
+        readonly IDictionary<Type, Type> subscriptions = new Dictionary<Type, Type>();
+        readonly IDictionary<Type, object> handlerObjects = new Dictionary<Type, object>();
+
         readonly IServiceProvider serviceProvider;
+        readonly FakeMQOptions options;
+
 #if NET45
         readonly Logger logger;
 #else
         readonly Microsoft.Extensions.Logging.ILogger<FakeMQEventBus> logger;
 #endif
-        readonly IDictionary<Type, Type> subscriptions = new Dictionary<Type, Type>();
-        readonly IDictionary<Type, object> handlerObjects = new Dictionary<Type, object>();
-
-        readonly TimeSpan EventStoreCleaningLoopTimeSpan = TimeSpan.FromMinutes(5);
-        readonly TimeSpan EventHandlingLoopTimeSpan = TimeSpan.FromMilliseconds(500);
-
         /// <summary>
         /// 
         /// </summary>
@@ -43,34 +43,27 @@ namespace Liyanjie.FakeMQ
 #if NET45
             this.logger = LogManager.GetCurrentClassLogger();
 #else
-            this.logger = serviceProvider.GetService(typeof(ILogger<FakeMQEventBus>)) as ILogger<FakeMQEventBus>;
+            this.logger = serviceProvider.GetService<ILogger<FakeMQEventBus>>();
+            this.options = serviceProvider.GetRequiredService<IOptions<FakeMQOptions>>().Value;
 #endif
-            this.getEventStore = () => this.serviceProvider?.GetService(typeof(IFakeMQEventStore)) as IFakeMQEventStore;
-            this.getProcessStore = () => this.serviceProvider?.GetService(typeof(IFakeMQProcessStore)) as IFakeMQProcessStore;
         }
-
-        readonly Func<IFakeMQEventStore> getEventStore;
-        readonly Func<IFakeMQProcessStore> getProcessStore;
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="getEventStore"></param>
-        /// <param name="getProcessStore"></param>
+        /// <param name="options"></param>
         public FakeMQEventBus(
 #if !NET45
             Func<ILogger<FakeMQEventBus>> getLogger,
 #endif
-            Func<IFakeMQEventStore> getEventStore,
-            Func<IFakeMQProcessStore> getProcessStore)
+            FakeMQOptions options)
         {
 #if NET45
             this.logger = LogManager.GetCurrentClassLogger();
 #else
             this.logger = getLogger?.Invoke();
 #endif
-            this.getEventStore = getEventStore;
-            this.getProcessStore = getProcessStore;
+            this.options = options;
         }
 
         /// <summary>
@@ -83,11 +76,11 @@ namespace Liyanjie.FakeMQ
             var @event = new FakeMQEvent
             {
                 Type = typeof(TEventMessage).Name,
-                Message = FakeMQEvent.GetMsgString(message),
+                Message = options.Serialize(message),
             };
             await TryExecuteAsync(async () =>
             {
-                using var eventStore = getEventStore();
+                using var eventStore = options.GetEventStore(serviceProvider);
                 return await eventStore.AddAsync(@event);
             });
         }
@@ -104,7 +97,7 @@ namespace Liyanjie.FakeMQ
             var handlerType = typeof(TEventHandler);
             var subscriptionId = GetSubscriptionId(messageType, handlerType);
 
-            using var processStore = getProcessStore();
+            using var processStore = options.GetProcessStore(serviceProvider);
             if (await processStore.AddAsync(new FakeMQProcess
             {
                 Subscription = subscriptionId,
@@ -135,7 +128,7 @@ namespace Liyanjie.FakeMQ
             {
                 subscriptions.Remove(handlerType);
 
-                using var processStore = getProcessStore();
+                using var processStore = options.GetProcessStore(serviceProvider);
                 await TryExecuteAsync(async () => await processStore.DeleteAsync(subscriptionId));
             }
         }
@@ -153,10 +146,10 @@ namespace Liyanjie.FakeMQ
             {
                 while (!stoppingToken.IsCancellationRequested)
                 {
-                    await Task.Delay(EventStoreCleaningLoopTimeSpan);
+                    await Task.Delay(options.EventStoreCleaningLoopTimeSpan);
 
-                    using var processStore = getProcessStore();
-                    using var eventStore = getEventStore();
+                    using var processStore = options.GetProcessStore(serviceProvider);
+                    using var eventStore = options.GetEventStore(serviceProvider);
                     try
                     {
                         var timestamp = long.MaxValue;
@@ -181,8 +174,8 @@ namespace Liyanjie.FakeMQ
             {
                 LogDebug($"Event handling loop start.");
 
-                using var processStore = getProcessStore();
-                using var eventStore = getEventStore();
+                using var processStore = options.GetProcessStore(serviceProvider);
+                using var eventStore = options.GetEventStore(serviceProvider);
                 foreach (var item in subscriptions)
                 {
                     var messageType = item.Value;
@@ -214,7 +207,7 @@ namespace Liyanjie.FakeMQ
 
                         var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
                         var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
-                        result = await (Task<bool>)method.Invoke(handler, new[] { @event.GetMsgObject(messageType) });
+                        result = await (Task<bool>)method.Invoke(handler, new[] { options.Deserialize(@event.Message, messageType) });
                     }
                     catch (Exception ex)
                     {
@@ -229,7 +222,7 @@ namespace Liyanjie.FakeMQ
 
                 LogDebug($"Event handling loop complte.");
 
-                await Task.Delay(EventHandlingLoopTimeSpan);
+                await Task.Delay(options.EventHandlingLoopTimeSpan);
             }
 
             LogInformation($"FakeMQ process stop.");
