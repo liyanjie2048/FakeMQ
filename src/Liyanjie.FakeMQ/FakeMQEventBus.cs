@@ -66,7 +66,14 @@ namespace Liyanjie.FakeMQ
             this.options = options;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public DateTimeOffset LastEventCleaningLoopTime { get; private set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public DateTimeOffset LastEventHandlingLoopTime { get; private set; }
 
         /// <summary>
