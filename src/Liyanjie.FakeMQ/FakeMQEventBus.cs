@@ -183,13 +183,12 @@ namespace Liyanjie.FakeMQ
             while (!stoppingToken.IsCancellationRequested)
             {
                 LogDebug($"Event handling loop start.");
+                LastEventHandlingLoopTime = DateTimeOffset.Now;
 
                 using var processStore = options.GetProcessStore(serviceProvider);
                 using var eventStore = options.GetEventStore(serviceProvider);
                 foreach (var item in subscriptions)
                 {
-                    LastEventHandlingLoopTime = DateTimeOffset.Now;
-
                     var messageType = item.Value;
                     var handlerType = item.Key;
                     var subscriptionId = GetSubscriptionId(messageType, handlerType);
