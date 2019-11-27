@@ -208,12 +208,11 @@ namespace Liyanjie.FakeMQ
                 LastEventHandlingLoopTime = DateTimeOffset.Now;
 
                 var endTimestamp = DateTimeOffset.Now.Ticks;
+                using var processStore = options.GetProcessStore(serviceProvider);
+                using var eventStore = options.GetEventStore(serviceProvider);
                 foreach (var item in subscriptions)
                 {
                     LastEventHandlingLoopTime = DateTimeOffset.Now;
-
-                    using var processStore = options.GetProcessStore(serviceProvider);
-                    using var eventStore = options.GetEventStore(serviceProvider);
 
                     var messageType = item.Value;
                     var handlerType = item.Key;
@@ -253,17 +252,21 @@ namespace Liyanjie.FakeMQ
                         var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
                         foreach (var @event in events)
                         {
-                            LogDebug($"Handle begins.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
                             LastEventHandlingLoopTime = DateTimeOffset.Now;
+
+                            LogDebug($"Handle begins.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
 
                             var result = await (Task<bool>)method.Invoke(handler, new[] { options.Deserialize(@event.Message, messageType) });
 
                             LogDebug($"Handle result:{result}.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
 
-                            await Task.Delay(50);
-                            await processStore.UpdateAsync(subscriptionId, @event.Timestamp);
+                            if (result)
+                            {
+                                await processStore.UpdateAsync(subscriptionId, @event.Timestamp);
+                                LogDebug($"Update process:{@event.Timestamp}");
+                            }
 
-                            LogDebug($"Update process:{@event.Timestamp}");
+                            await Task.Delay(50);
                         }
                     }
                     catch (Exception ex)
