@@ -18,14 +18,14 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services"></param>
         /// <param name="configureDbContextOptions"></param>
         /// <param name="configureFakeMQOptions"></param>
-        /// <param name="clearEventStore"></param>
+        /// <param name="clearEvent"></param>
         /// <returns></returns>
         public static IServiceCollection AddFakeMQWithEFCore(this IServiceCollection services,
             Action<DbContextOptionsBuilder> configureDbContextOptions,
             Action<FakeMQOptions> configureFakeMQOptions,
-            Func<FakeMQContext, long, Task> clearEventStore = null)
+            Func<FakeMQContext, long, Task> clearEvent = null)
         {
-            FakeMQEventStore.CleanEventStore = clearEventStore;
+            FakeMQEventStore.CleanEvent = clearEvent;
             services.AddDbContext<FakeMQContext>(configureDbContextOptions, ServiceLifetime.Transient, ServiceLifetime.Singleton);
             services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(configureFakeMQOptions);
 

@@ -22,7 +22,7 @@ namespace Liyanjie.FakeMQ
             this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        internal static Func<FakeMQContext, long, Task> CleanEventStore { get; set; }
+        internal static Func<FakeMQContext, long, Task> CleanEvent { get; set; }
 
         /// <summary>
         /// 
@@ -64,8 +64,8 @@ namespace Liyanjie.FakeMQ
         /// <returns></returns>
         public async Task CleanAsync(long timestamp)
         {
-            if (CleanEventStore != null)
-                await CleanEventStore.Invoke(context, timestamp);
+            if (CleanEvent != null)
+                await CleanEvent.Invoke(context, timestamp);
         }
 
         async Task<bool> SaveAsync()

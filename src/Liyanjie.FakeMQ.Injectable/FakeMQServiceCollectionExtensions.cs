@@ -17,7 +17,8 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services"></param>
         /// <param name="configureOptions"></param>
         /// <returns></returns>
-        public static IServiceCollection AddFakeMQ<TEventStore, TProcessStore>(this IServiceCollection services,Action<FakeMQOptions> configureOptions)
+        public static IServiceCollection AddFakeMQ<TEventStore, TProcessStore>(this IServiceCollection services,
+            Action<FakeMQOptions> configureOptions)
             where TEventStore : class, IFakeMQEventStore
             where TProcessStore : class, IFakeMQProcessStore
         {
