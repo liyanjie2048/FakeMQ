@@ -54,7 +54,7 @@ namespace Liyanjie.FakeMQ
         public async Task<IEnumerable<FakeMQEvent>> GetAsync(string type, long startTimestamp, long endTimestamp)
         {
             return await context.FakeMQEvents.AsNoTracking()
-                .Where(_ => _.Type == type && _.Timestamp > startTimestamp && _.Timestamp < endTimestamp)
+                .Where(_ => _.Type == type && _.Timestamp > startTimestamp && _.Timestamp <= endTimestamp)
                 .OrderBy(_ => _.Timestamp)
                 .ToListAsync();
         }

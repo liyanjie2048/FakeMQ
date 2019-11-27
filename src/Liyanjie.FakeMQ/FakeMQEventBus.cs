@@ -209,7 +209,10 @@ namespace Liyanjie.FakeMQ
 
                     var events = await eventStore.GetAsync(messageType.Name, startTimestamp, endTimestamp);
                     if (events.IsNullOrEmpty())
+                    {
+                        await TryExecuteAsync(async () => await processStore.UpdateAsync(subscriptionId, endTimestamp));
                         continue;
+                    }
 
                     var handler = handlerObjects.ContainsKey(handlerType)
                         ? handlerObjects[handlerType]
