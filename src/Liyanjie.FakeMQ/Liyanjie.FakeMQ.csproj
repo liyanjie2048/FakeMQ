@@ -28,12 +28,13 @@
     </Target>
 
     <ItemGroup Condition="'$(TargetFramework)'=='net45'">
-        <PackageReference Include="NLog" Version="4.6.7" />
         <PackageReference Include="Liyanjie.Utilities" Version="1.0.0" />
+        <PackageReference Include="NLog" Version="4.6.7" />
         <PackageReference Include="Polly" Version="7.1.1" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+        <PackageReference Include="Liyanjie.Utilities" Version="1.0.0" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
         <PackageReference Include="Microsoft.Extensions.Options" Version="2.0.0" />
@@ -41,6 +42,7 @@
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
+        <PackageReference Include="Liyanjie.Utilities" Version="1.0.0" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.0.0" />
         <PackageReference Include="Microsoft.Extensions.Options" Version="3.0.0" />

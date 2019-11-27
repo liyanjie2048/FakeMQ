@@ -198,16 +198,17 @@ namespace Liyanjie.FakeMQ
 
                 using var processStore = options.GetProcessStore(serviceProvider);
                 using var eventStore = options.GetEventStore(serviceProvider);
+                var endTimestamp = DateTimeOffset.Now.Ticks;
                 foreach (var item in subscriptions)
                 {
                     var messageType = item.Value;
                     var handlerType = item.Key;
                     var subscriptionId = GetSubscriptionId(messageType, handlerType);
 
-                    var timestamp = (await processStore.GetAsync(subscriptionId)).Timestamp;
+                    var startTimestamp = (await processStore.GetAsync(subscriptionId)).Timestamp;
 
-                    var @event = await eventStore.GetAsync(messageType.Name, timestamp);
-                    if (@event == null)
+                    var events = await eventStore.GetAsync(messageType.Name, startTimestamp, endTimestamp);
+                    if (events.IsNullOrEmpty())
                         continue;
 
                     var handler = handlerObjects.ContainsKey(handlerType)
@@ -222,24 +223,26 @@ namespace Liyanjie.FakeMQ
                         continue;
                     }
 
-                    bool result = false;
                     try
                     {
-                        LogDebug($"Event handling begins.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
-
                         var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
                         var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
-                        result = await (Task<bool>)method.Invoke(handler, new[] { options.Deserialize(@event.Message, messageType) });
+                        foreach (var @event in events)
+                        {
+                            LogDebug($"Event handling begins.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
+
+                            var result = await (Task<bool>)method.Invoke(handler, new[] { options.Deserialize(@event.Message, messageType) });
+
+                            LogDebug($"Event handling result:{result}.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
+
+                            if (result)
+                                await TryExecuteAsync(async () => await processStore.UpdateAsync(subscriptionId, @event.Timestamp));
+                        }
                     }
                     catch (Exception ex)
                     {
-                        LogError(ex, $"Event handling error:{ex.Message}.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
+                        LogError(ex, $"Event handling error:{ex.Message}.(handlerType:{handlerType.FullName},messageType:{messageType.FullName})");
                     }
-
-                    LogDebug($"Event handling result:{result}.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
-
-                    if (result)
-                        await TryExecuteAsync(async () => await processStore.UpdateAsync(subscriptionId, @event.Timestamp));
                 }
 
                 LogDebug($"Event handling loop complte.");

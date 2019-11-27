@@ -36,6 +36,6 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 处理事件循环间隔
         /// </summary>
-        public TimeSpan EventHandlingLoopTimeSpan { get; set; } = TimeSpan.FromMilliseconds(500);
+        public TimeSpan EventHandlingLoopTimeSpan { get; set; } = TimeSpan.FromMilliseconds(100);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -47,14 +48,15 @@ namespace Liyanjie.FakeMQ
         /// 
         /// </summary>
         /// <param name="type"></param>
-        /// <param name="timestamp"></param>
+        /// <param name="startTimestamp"></param>
+        /// <param name="endTimestamp"></param>
         /// <returns></returns>
-        public async Task<FakeMQEvent> GetAsync(string type, long timestamp)
+        public async Task<IEnumerable<FakeMQEvent>> GetAsync(string type, long startTimestamp, long endTimestamp)
         {
             return await context.FakeMQEvents.AsNoTracking()
-                .Where(_ => _.Type == type && _.Timestamp > timestamp)
+                .Where(_ => _.Type == type && _.Timestamp > startTimestamp && _.Timestamp < endTimestamp)
                 .OrderBy(_ => _.Timestamp)
-                .FirstOrDefaultAsync();
+                .ToListAsync();
         }
 
         /// <summary>
