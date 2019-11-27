@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
 {
-    public class FakeMQProcessStore : IFakeMQProcessStore, IDisposable
+    public class FakeMQProcessStore : IFakeMQProcessStore
     {
         readonly DataContext context;
         public FakeMQProcessStore(DataContext context)
@@ -18,50 +18,39 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
             this.context?.Dispose();
         }
 
-        public async Task<bool> AddAsync(FakeMQProcess process)
+        public async Task AddAsync(FakeMQProcess process)
         {
             if (await context.FakeMQProcesses.AnyAsync(_ => _.Subscription == process.Subscription))
-                return true;
+                return;
 
             context.FakeMQProcesses.Add(process);
 
-            return await SaveAsync();
+            await context.SaveChangesAsync();
         }
         public async Task<FakeMQProcess> GetAsync(string subscription)
         {
             return await context.FakeMQProcesses.AsNoTracking()
                 .SingleOrDefaultAsync(_ => _.Subscription == subscription);
         }
-        public async Task<bool> UpdateAsync(string subscription, long timestamp)
+        public async Task UpdateAsync(string subscription, long timestamp)
         {
             var item = await context.FakeMQProcesses.SingleOrDefaultAsync(_ => _.Subscription == subscription);
             if (item == null)
-                return true;
+                return;
 
             item.Timestamp = timestamp;
 
-            return await SaveAsync();
+            await context.SaveChangesAsync();
         }
-        public async Task<bool> DeleteAsync(string subscription)
+        public async Task DeleteAsync(string subscription)
         {
             var item = await context.FakeMQProcesses.SingleOrDefaultAsync(_ => _.Subscription == subscription);
             if (item == null)
-                return true;
+                return;
 
             context.FakeMQProcesses.Remove(item);
 
-            return await SaveAsync();
-        }
-
-        async Task<bool> SaveAsync()
-        {
-            try
-            {
-                await context.SaveChangesAsync();
-                return true;
-            }
-            catch { }
-            return false;
+            await context.SaveChangesAsync();
         }
     }
 }

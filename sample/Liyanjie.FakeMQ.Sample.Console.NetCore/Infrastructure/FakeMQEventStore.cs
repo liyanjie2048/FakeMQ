@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -6,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
 {
-    public class FakeMQEventStore : IFakeMQEventStore, IDisposable
+    public class FakeMQEventStore : IFakeMQEventStore
     {
         readonly DataContext context;
         public FakeMQEventStore(DataContext context)
@@ -19,18 +20,18 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
             this.context?.Dispose();
         }
 
-        public async Task<bool> AddAsync(FakeMQEvent @event)
+        public async Task AddAsync(FakeMQEvent @event)
         {
             context.FakeMQEvents.Add(@event);
-            return await SaveAsync();
+            await context.SaveChangesAsync();
         }
 
-        public async Task<FakeMQEvent> GetAsync(string type, long timestamp)
+        public async Task<IEnumerable<FakeMQEvent>> GetAsync(string type, long startTimestamp, long endTimestamp)
         {
             return await context.FakeMQEvents.AsNoTracking()
-                .Where(_ => _.Type == type && _.Timestamp > timestamp)
+                .Where(_ => _.Type == type && _.Timestamp > startTimestamp && _.Timestamp < endTimestamp)
                 .OrderBy(_ => _.Timestamp)
-                .FirstOrDefaultAsync();
+                .ToListAsync();
         }
 
         /// <summary>
@@ -38,21 +39,10 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
         /// </summary>
         /// <param name="timestamp"></param>
         /// <returns></returns>
-        public async Task ClearAsync(long timestamp)
+        public async Task CleanAsync(long timestamp)
         {
             var sql = $"DELETE FROM [FakeMQEvents] WHERE [Timestamp]<{timestamp}";
             await context.Database.ExecuteSqlRawAsync(sql);
-        }
-
-        async Task<bool> SaveAsync()
-        {
-            try
-            {
-                await context.SaveChangesAsync();
-                return true;
-            }
-            catch { }
-            return false;
         }
     }
 }

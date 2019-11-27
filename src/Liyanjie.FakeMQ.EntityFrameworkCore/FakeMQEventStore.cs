@@ -30,7 +30,7 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         public void Dispose()
         {
-            this.context?.Dispose();
+            context.Dispose();
         }
 
         /// <summary>
@@ -68,7 +68,10 @@ namespace Liyanjie.FakeMQ
         public async Task CleanAsync(long timestamp)
         {
             if (CleanEvent != null)
+            {
                 await CleanEvent.Invoke(context, timestamp);
+                await context.SaveChangesAsync();
+            }
         }
     }
 }

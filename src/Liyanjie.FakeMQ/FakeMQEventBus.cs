@@ -52,17 +52,18 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <param name="options"></param>
         public FakeMQEventBus(
+            FakeMQOptions options
 #if !NET45
-            Func<ILogger<FakeMQEventBus>> getLogger,
+            ,ILogger<FakeMQEventBus> logger
 #endif
-            FakeMQOptions options)
+            )
         {
+            this.options = options;
 #if NET45
             this.logger = LogManager.GetCurrentClassLogger();
 #else
-            this.logger = getLogger?.Invoke();
+            this.logger = logger;
 #endif
-            this.options = options;
         }
 
         /// <summary>
@@ -97,9 +98,9 @@ namespace Liyanjie.FakeMQ
                 Type = typeof(TEventMessage).Name,
                 Message = options.Serialize(message),
             };
-            using var eventStore = options.GetEventStore(serviceProvider);
             try
             {
+                using var eventStore = options.GetEventStore(serviceProvider);
                 await eventStore.AddAsync(@event);
             }
             catch (Exception ex)
@@ -120,9 +121,9 @@ namespace Liyanjie.FakeMQ
             var handlerType = typeof(TEventHandler);
             var subscriptionId = GetSubscriptionId(messageType, handlerType);
 
-            using var processStore = options.GetProcessStore(serviceProvider);
             try
             {
+                using var processStore = options.GetProcessStore(serviceProvider);
                 await processStore.AddAsync(new FakeMQProcess
                 {
                     Subscription = subscriptionId,
@@ -156,9 +157,9 @@ namespace Liyanjie.FakeMQ
             {
                 subscriptions.Remove(handlerType);
 
-                using var processStore = options.GetProcessStore(serviceProvider);
                 try
                 {
+                    using var processStore = options.GetProcessStore(serviceProvider);
                     await processStore.DeleteAsync(subscriptionId);
                 }
                 catch (Exception ex)
@@ -185,17 +186,17 @@ namespace Liyanjie.FakeMQ
                         LastEventCleaningLoopTime = DateTimeOffset.Now;
 
                         var timestamp = long.MaxValue;
-                        using var processStore = options.GetProcessStore(serviceProvider);
-                        foreach (var item in subscriptions.Select(_ => GetSubscriptionId(_.Value, _.Key)))
-                        {
-                            timestamp = Math.Min(timestamp, (await processStore.GetAsync(item)).Timestamp);
-                        }
-
-                        LogInformation($"Clean events at timestamp:{timestamp}.");
-
-                        using var eventStore = options.GetEventStore(serviceProvider);
                         try
                         {
+                            using var processStore = options.GetProcessStore(serviceProvider);
+                            foreach (var item in subscriptions.Select(_ => GetSubscriptionId(_.Value, _.Key)))
+                            {
+                                timestamp = Math.Min(timestamp, (await processStore.GetAsync(item)).Timestamp);
+                            }
+
+                            LogInformation($"Clean events at timestamp:{timestamp}.");
+
+                            using var eventStore = options.GetEventStore(serviceProvider);
                             await eventStore.CleanAsync(timestamp);
                         }
                         catch (Exception ex)
@@ -218,36 +219,29 @@ namespace Liyanjie.FakeMQ
                     var handlerType = item.Key;
                     var subscriptionId = GetSubscriptionId(messageType, handlerType);
 
-                    var startTimestamp = (await processStore.GetAsync(subscriptionId)).Timestamp;
-
-                    var events = await eventStore.GetAsync(messageType.Name, startTimestamp, endTimestamp);
-                    if (events.IsNullOrEmpty())
-                    {
-                        try
-                        {
-                            await processStore.UpdateAsync(subscriptionId, endTimestamp);
-                        }
-                        catch (Exception ex)
-                        {
-                            LogError(ex, $"更新订阅异常。订阅ID：{subscriptionId}");
-                        }
-                        continue;
-                    }
-
-                    var handler = handlerObjects.ContainsKey(handlerType)
-                        ? handlerObjects[handlerType]
-                        : serviceProvider == null
-                            ? Activator.CreateInstance(handlerType)
-                            : GetServiceOrCreateInstance(serviceProvider, handlerType);
-
-                    if (handler == null)
-                    {
-                        LogWarning($"Can not create instance of handlerType:{handlerType.FullName}.");
-                        continue;
-                    }
-
                     try
                     {
+                        var startTimestamp = (await processStore.GetAsync(subscriptionId)).Timestamp;
+
+                        var events = await eventStore.GetAsync(messageType.Name, startTimestamp, endTimestamp);
+                        if (events.IsNullOrEmpty())
+                        {
+                            await processStore.UpdateAsync(subscriptionId, endTimestamp);
+                            continue;
+                        }
+
+                        var handler = handlerObjects.ContainsKey(handlerType)
+                            ? handlerObjects[handlerType]
+                            : serviceProvider == null
+                                ? Activator.CreateInstance(handlerType)
+                                : GetServiceOrCreateInstance(serviceProvider, handlerType);
+
+                        if (handler == null)
+                        {
+                            LogWarning($"Can not create instance of handlerType:{handlerType.FullName}.");
+                            continue;
+                        }
+
                         var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
                         var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
                         foreach (var @event in events)
@@ -258,7 +252,7 @@ namespace Liyanjie.FakeMQ
 
                             var result = await (Task<bool>)method.Invoke(handler, new[] { options.Deserialize(@event.Message, messageType) });
 
-                            LogDebug($"Handle result:{result}.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
+                            LogDebug($"Handle result:{result}.");
 
                             if (result)
                             {
@@ -266,7 +260,7 @@ namespace Liyanjie.FakeMQ
                                 LogDebug($"Update process:{@event.Timestamp}");
                             }
 
-                            await Task.Delay(50);
+                            await Task.Delay(100);
                         }
                     }
                     catch (Exception ex)

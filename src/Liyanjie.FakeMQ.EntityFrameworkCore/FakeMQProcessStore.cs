@@ -26,7 +26,7 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         public void Dispose()
         {
-            this.context?.Dispose();
+            context.Dispose();
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace Liyanjie.FakeMQ
         {
             return await context.FakeMQProcesses
                 .AsNoTracking()
-                .SingleOrDefaultAsync(_ => _.Subscription == subscription);
+                .FirstOrDefaultAsync(_ => _.Subscription == subscription);
         }
 
         /// <summary>
