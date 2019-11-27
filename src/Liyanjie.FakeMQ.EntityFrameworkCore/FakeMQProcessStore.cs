@@ -34,14 +34,14 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <param name="process"></param>
         /// <returns></returns>
-        public async Task<bool> AddAsync(FakeMQProcess process)
+        public async Task AddAsync(FakeMQProcess process)
         {
             if (await context.FakeMQProcesses.AnyAsync(_ => _.Subscription == process.Subscription))
-                return true;
+                return;
 
             context.FakeMQProcesses.Add(process);
 
-            return await SaveAsync();
+            await context.SaveChangesAsync();
         }
 
         /// <summary>
@@ -62,17 +62,17 @@ namespace Liyanjie.FakeMQ
         /// <param name="subscription"></param>
         /// <param name="timestamp"></param>
         /// <returns></returns>
-        public async Task<bool> UpdateAsync(string subscription, long timestamp)
+        public async Task UpdateAsync(string subscription, long timestamp)
         {
             var item = await context.FakeMQProcesses
                 .AsTracking()
-                .SingleOrDefaultAsync(_ => _.Subscription == subscription);
+                .FirstOrDefaultAsync(_ => _.Subscription == subscription);
             if (item == null)
-                return true;
+                return;
 
             item.Timestamp = timestamp;
 
-            return await SaveAsync();
+            await context.SaveChangesAsync();
         }
 
         /// <summary>
@@ -80,28 +80,17 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <param name="subscription"></param>
         /// <returns></returns>
-        public async Task<bool> DeleteAsync(string subscription)
+        public async Task DeleteAsync(string subscription)
         {
             var item = await context.FakeMQProcesses
                 .AsTracking()
-                .SingleOrDefaultAsync(_ => _.Subscription == subscription);
+                .FirstOrDefaultAsync(_ => _.Subscription == subscription);
             if (item == null)
-                return true;
+                return;
 
             context.FakeMQProcesses.Remove(item);
 
-            return await SaveAsync();
-        }
-
-        async Task<bool> SaveAsync()
-        {
-            try
-            {
-                await context.SaveChangesAsync();
-                return true;
-            }
-            catch { }
-            return false;
+            await context.SaveChangesAsync();
         }
     }
 }

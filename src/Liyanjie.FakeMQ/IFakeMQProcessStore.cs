@@ -13,7 +13,7 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <param name="process"></param>
         /// <returns></returns>
-        Task<bool> AddAsync(FakeMQProcess process);
+        Task AddAsync(FakeMQProcess process);
 
         /// <summary>
         /// 
@@ -28,13 +28,13 @@ namespace Liyanjie.FakeMQ
         /// <param name="subscription"></param>
         /// <param name="timestamp"></param>
         /// <returns></returns>
-        Task<bool> UpdateAsync(string subscription, long timestamp);
+        Task UpdateAsync(string subscription, long timestamp);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="subscription"></param>
         /// <returns></returns>
-        Task<bool> DeleteAsync(string subscription);
+        Task DeleteAsync(string subscription);
     }
 }

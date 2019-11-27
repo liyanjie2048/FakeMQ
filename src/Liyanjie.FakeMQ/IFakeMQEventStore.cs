@@ -14,7 +14,7 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <param name="event"></param>
         /// <returns></returns>
-        Task<bool> AddAsync(FakeMQEvent @event);
+        Task AddAsync(FakeMQEvent @event);
 
         /// <summary>
         /// 

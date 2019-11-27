@@ -38,10 +38,10 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <param name="event"></param>
         /// <returns></returns>
-        public async Task<bool> AddAsync(FakeMQEvent @event)
+        public async Task AddAsync(FakeMQEvent @event)
         {
             context.FakeMQEvents.Add(@event);
-            return await SaveAsync();
+            await context.SaveChangesAsync();
         }
 
         /// <summary>
@@ -53,7 +53,8 @@ namespace Liyanjie.FakeMQ
         /// <returns></returns>
         public async Task<IEnumerable<FakeMQEvent>> GetAsync(string type, long startTimestamp, long endTimestamp)
         {
-            return await context.FakeMQEvents.AsNoTracking()
+            return await context.FakeMQEvents
+                .AsNoTracking()
                 .Where(_ => _.Type == type && _.Timestamp > startTimestamp && _.Timestamp <= endTimestamp)
                 .OrderBy(_ => _.Timestamp)
                 .ToListAsync();
@@ -68,17 +69,6 @@ namespace Liyanjie.FakeMQ
         {
             if (CleanEvent != null)
                 await CleanEvent.Invoke(context, timestamp);
-        }
-
-        async Task<bool> SaveAsync()
-        {
-            try
-            {
-                await context.SaveChangesAsync();
-                return true;
-            }
-            catch { }
-            return false;
         }
     }
 }
