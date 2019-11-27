@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -67,17 +68,27 @@ namespace Liyanjie.FakeMQ
         }
 
         /// <summary>
-        /// 
+        /// 所有订阅
+        /// </summary>
+        public IReadOnlyDictionary<Type, Type> Subscriptions => new ReadOnlyDictionary<Type, Type>(subscriptions);
+
+        /// <summary>
+        /// 事件消息处理器对象
+        /// </summary>
+        public IReadOnlyDictionary<Type, object> HandlerObjects => new ReadOnlyDictionary<Type, object>(handlerObjects);
+
+        /// <summary>
+        /// 最后事件清理时间
         /// </summary>
         public DateTimeOffset LastEventCleaningLoopTime { get; private set; }
 
         /// <summary>
-        /// 
+        /// 最后事件处理时间
         /// </summary>
         public DateTimeOffset LastEventHandlingLoopTime { get; private set; }
 
         /// <summary>
-        /// 
+        /// 发布事件消息
         /// </summary>
         /// <typeparam name="TEventMessage"></typeparam>
         /// <param name="message"></param>
@@ -96,7 +107,7 @@ namespace Liyanjie.FakeMQ
         }
 
         /// <summary>
-        /// 
+        /// 事件消息订阅
         /// </summary>
         /// <typeparam name="TEventMessage"></typeparam>
         /// <typeparam name="TEventHandler"></typeparam>
@@ -123,7 +134,7 @@ namespace Liyanjie.FakeMQ
         }
 
         /// <summary>
-        /// 
+        /// 取消事件消息订阅
         /// </summary>
         /// <typeparam name="TEventMessage"></typeparam>
         /// <typeparam name="TEventHandler"></typeparam>
@@ -156,7 +167,7 @@ namespace Liyanjie.FakeMQ
             {
                 while (!stoppingToken.IsCancellationRequested)
                 {
-                    await Task.Delay(options.EventStoreCleaningLoopTimeSpan);
+                    await Task.Delay(options.EventCleaningLoopTimeSpan);
                     LastEventCleaningLoopTime = DateTimeOffset.Now;
 
                     var timestamp = long.MaxValue;
