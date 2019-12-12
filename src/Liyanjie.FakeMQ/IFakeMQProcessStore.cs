@@ -18,6 +18,12 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="process"></param>
+        void Add(FakeMQProcess process);
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="subscription"></param>
         /// <returns></returns>
         Task<FakeMQProcess> GetAsync(string subscription);
@@ -36,5 +42,11 @@ namespace Liyanjie.FakeMQ
         /// <param name="subscription"></param>
         /// <returns></returns>
         Task DeleteAsync(string subscription);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="subscription"></param>
+        void Delete(string subscription);
     }
 }

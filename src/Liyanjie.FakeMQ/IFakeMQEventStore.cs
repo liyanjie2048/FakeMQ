@@ -19,6 +19,12 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="event"></param>
+        void Add(FakeMQEvent @event);
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="type"></param>
         /// <param name="startTimestamp"></param>
         /// <param name="endTimestamp"></param>

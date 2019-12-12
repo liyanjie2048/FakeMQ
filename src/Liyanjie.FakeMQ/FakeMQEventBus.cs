@@ -108,6 +108,29 @@ namespace Liyanjie.FakeMQ
                 LogError(ex, $"事件发布异常。事件消息：{@event.Message}");
             }
         }
+        
+        /// <summary>
+        /// 发布事件消息
+        /// </summary>
+        /// <typeparam name="TEventMessage"></typeparam>
+        /// <param name="message"></param>
+        public void Publish<TEventMessage>(TEventMessage message)
+        {
+            var @event = new FakeMQEvent
+            {
+                Type = typeof(TEventMessage).Name,
+                Message = options.Serialize(message),
+            };
+            try
+            {
+                using var eventStore = options.GetEventStore(serviceProvider);
+                eventStore.Add(@event);
+            }
+            catch (Exception ex)
+            {
+                LogError(ex, $"事件发布异常。事件消息：{@event.Message}");
+            }
+        }
 
         /// <summary>
         /// 事件消息订阅
@@ -125,6 +148,38 @@ namespace Liyanjie.FakeMQ
             {
                 using var processStore = options.GetProcessStore(serviceProvider);
                 await processStore.AddAsync(new FakeMQProcess
+                {
+                    Subscription = subscriptionId,
+                });
+                if (!subscriptions.ContainsKey(handlerType))
+                {
+                    subscriptions.Add(handlerType, messageType);
+                    if (handler != null)
+                        handlerObjects.Add(handlerType, handler);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError(ex, $"事件订阅异常。订阅ID：{subscriptionId}");
+            }
+        }
+
+        /// <summary>
+        /// 事件消息订阅
+        /// </summary>
+        /// <typeparam name="TEventMessage"></typeparam>
+        /// <typeparam name="TEventHandler"></typeparam>
+        public void Subscribe<TEventMessage, TEventHandler>(TEventHandler handler = default)
+            where TEventHandler : IFakeMQEventHandler<TEventMessage>
+        {
+            var messageType = typeof(TEventMessage);
+            var handlerType = typeof(TEventHandler);
+            var subscriptionId = GetSubscriptionId(messageType, handlerType);
+
+            try
+            {
+                using var processStore = options.GetProcessStore(serviceProvider);
+                processStore.Add(new FakeMQProcess
                 {
                     Subscription = subscriptionId,
                 });
@@ -161,6 +216,34 @@ namespace Liyanjie.FakeMQ
                 {
                     using var processStore = options.GetProcessStore(serviceProvider);
                     await processStore.DeleteAsync(subscriptionId);
+                }
+                catch (Exception ex)
+                {
+                    LogError(ex, $"取消订阅异常。订阅ID：{subscriptionId}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 取消事件消息订阅
+        /// </summary>
+        /// <typeparam name="TEventMessage"></typeparam>
+        /// <typeparam name="TEventHandler"></typeparam>
+        public void Unsubscribe<TEventMessage, TEventHandler>()
+            where TEventHandler : IFakeMQEventHandler<TEventMessage>
+        {
+            var messageType = typeof(TEventMessage);
+            var handlerType = typeof(TEventHandler);
+            var subscriptionId = GetSubscriptionId(messageType, handlerType);
+
+            if (subscriptions.ContainsKey(handlerType))
+            {
+                subscriptions.Remove(handlerType);
+
+                try
+                {
+                    using var processStore = options.GetProcessStore(serviceProvider);
+                    processStore.Delete(subscriptionId);
                 }
                 catch (Exception ex)
                 {

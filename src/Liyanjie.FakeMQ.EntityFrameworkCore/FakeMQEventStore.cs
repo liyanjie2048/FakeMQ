@@ -25,32 +25,27 @@ namespace Liyanjie.FakeMQ
 
         internal static Func<FakeMQContext, long, Task> CleanEvent { get; set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <inheritdoc />
         public void Dispose()
         {
             context.Dispose();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="event"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public async Task AddAsync(FakeMQEvent @event)
         {
             context.FakeMQEvents.Add(@event);
             await context.SaveChangesAsync();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="startTimestamp"></param>
-        /// <param name="endTimestamp"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
+        public void Add(FakeMQEvent @event)
+        {
+            context.FakeMQEvents.Add(@event);
+            context.SaveChanges();
+        }
+
+        /// <inheritdoc />
         public async Task<IEnumerable<FakeMQEvent>> GetAsync(string type, long startTimestamp, long endTimestamp)
         {
             return await context.FakeMQEvents
@@ -60,11 +55,7 @@ namespace Liyanjie.FakeMQ
                 .ToListAsync();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="timestamp"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public async Task CleanAsync(long timestamp)
         {
             if (CleanEvent != null)

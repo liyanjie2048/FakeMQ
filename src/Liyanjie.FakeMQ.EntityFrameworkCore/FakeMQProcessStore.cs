@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
@@ -21,19 +22,13 @@ namespace Liyanjie.FakeMQ
             this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <inheritdoc />
         public void Dispose()
         {
             context.Dispose();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="process"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public async Task AddAsync(FakeMQProcess process)
         {
             if (await context.FakeMQProcesses.AnyAsync(_ => _.Subscription == process.Subscription))
@@ -44,11 +39,18 @@ namespace Liyanjie.FakeMQ
             await context.SaveChangesAsync();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="subscription"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
+        public void Add(FakeMQProcess process)
+        {
+            if (context.FakeMQProcesses.Any(_ => _.Subscription == process.Subscription))
+                return;
+
+            context.FakeMQProcesses.Add(process);
+
+            context.SaveChanges();
+        }
+
+        /// <inheritdoc />
         public async Task<FakeMQProcess> GetAsync(string subscription)
         {
             return await context.FakeMQProcesses
@@ -56,12 +58,7 @@ namespace Liyanjie.FakeMQ
                 .FirstOrDefaultAsync(_ => _.Subscription == subscription);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="subscription"></param>
-        /// <param name="timestamp"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public async Task UpdateAsync(string subscription, long timestamp)
         {
             var item = await context.FakeMQProcesses
@@ -75,11 +72,7 @@ namespace Liyanjie.FakeMQ
             await context.SaveChangesAsync();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="subscription"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public async Task DeleteAsync(string subscription)
         {
             var item = await context.FakeMQProcesses
@@ -91,6 +84,20 @@ namespace Liyanjie.FakeMQ
             context.FakeMQProcesses.Remove(item);
 
             await context.SaveChangesAsync();
+        }
+
+        /// <inheritdoc />
+        public void Delete(string subscription)
+        {
+            var item = context.FakeMQProcesses
+                .AsTracking()
+                .FirstOrDefault(_ => _.Subscription == subscription);
+            if (item == null)
+                return;
+
+            context.FakeMQProcesses.Remove(item);
+
+            context.SaveChanges();
         }
     }
 }
