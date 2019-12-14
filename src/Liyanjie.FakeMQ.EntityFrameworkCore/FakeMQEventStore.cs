@@ -23,8 +23,6 @@ namespace Liyanjie.FakeMQ
             this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        internal static Func<FakeMQContext, long, Task> CleanEvent { get; set; }
-
         /// <inheritdoc />
         public void Dispose()
         {
@@ -53,16 +51,6 @@ namespace Liyanjie.FakeMQ
                 .Where(_ => _.Type == type && _.Timestamp > startTimestamp && _.Timestamp <= endTimestamp)
                 .OrderBy(_ => _.Timestamp)
                 .ToListAsync();
-        }
-
-        /// <inheritdoc />
-        public async Task CleanAsync(long timestamp)
-        {
-            if (CleanEvent != null)
-            {
-                await CleanEvent.Invoke(context, timestamp);
-                await context.SaveChangesAsync();
-            }
         }
     }
 }

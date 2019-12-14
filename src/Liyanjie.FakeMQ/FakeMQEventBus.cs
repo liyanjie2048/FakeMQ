@@ -47,10 +47,6 @@ namespace Liyanjie.FakeMQ
 #endif
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="options"></param>
         public FakeMQEventBus(
             FakeMQOptions options
 #if !NET45
@@ -65,6 +61,11 @@ namespace Liyanjie.FakeMQ
             this.logger = logger;
 #endif
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static bool Processing { get; private set; }
 
         /// <summary>
         /// 所有订阅
@@ -108,7 +109,7 @@ namespace Liyanjie.FakeMQ
                 LogError(ex, $"事件发布异常。事件消息：{@event.Message}");
             }
         }
-        
+
         /// <summary>
         /// 发布事件消息
         /// </summary>
@@ -259,34 +260,14 @@ namespace Liyanjie.FakeMQ
         /// <returns></returns>
         public async Task ProcessAsync(CancellationToken stoppingToken)
         {
+            if (Processing)
+                return;
+
             LogInformation($"FakeMQ process start.");
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                if (LastEventCleaningLoopTime.Add(options.EventCleaningLoopTimeSpan) < DateTimeOffset.Now)
-                    _ = Task.Run(async () =>
-                    {
-                        LastEventCleaningLoopTime = DateTimeOffset.Now;
-
-                        var timestamp = long.MaxValue;
-                        try
-                        {
-                            using var processStore = options.GetProcessStore(serviceProvider);
-                            foreach (var item in subscriptions.Select(_ => GetSubscriptionId(_.Value, _.Key)))
-                            {
-                                timestamp = Math.Min(timestamp, (await processStore.GetAsync(item)).Timestamp);
-                            }
-
-                            LogInformation($"Clean events at timestamp:{timestamp}.");
-
-                            using var eventStore = options.GetEventStore(serviceProvider);
-                            await eventStore.CleanAsync(timestamp);
-                        }
-                        catch (Exception ex)
-                        {
-                            LogError(ex, "Error when clean events.");
-                        }
-                    });
+                Processing = true;
 
                 LogDebug($"Event handling loop start.");
                 LastEventHandlingLoopTime = DateTimeOffset.Now;
@@ -357,6 +338,7 @@ namespace Liyanjie.FakeMQ
                 await Task.Delay(options.EventHandlingLoopTimeSpan);
             }
 
+            Processing = false;
             LogInformation($"FakeMQ process stop.");
         }
 

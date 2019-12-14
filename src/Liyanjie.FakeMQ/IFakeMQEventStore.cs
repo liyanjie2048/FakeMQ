@@ -30,12 +30,5 @@ namespace Liyanjie.FakeMQ
         /// <param name="endTimestamp"></param>
         /// <returns></returns>
         Task<IEnumerable<FakeMQEvent>> GetAsync(string type, long startTimestamp,long endTimestamp);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="timestamp"></param>
-        /// <returns></returns>
-        Task CleanAsync(long timestamp);
     }
 }
