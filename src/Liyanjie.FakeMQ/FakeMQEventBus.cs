@@ -77,11 +77,11 @@ namespace Liyanjie.FakeMQ
             {
                 using var eventStore = options.GetEventStore(serviceProvider);
                 await eventStore.AddAsync(@event);
-                logger.LogInformation($"事件发布成功。事件消息：{@event.Message}");
+                logger.LogDebug($"PublishAsync done.(message:{@event.Message})");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"事件发布异常。事件消息：{@event.Message}");
+                logger.LogError(ex, $"PublishAsync error.(message:{@event.Message})");
             }
         }
 
@@ -101,11 +101,11 @@ namespace Liyanjie.FakeMQ
             {
                 using var eventStore = options.GetEventStore(serviceProvider);
                 eventStore.Add(@event);
-                logger.LogInformation($"事件发布成功。事件消息：{@event.Message}");
+                logger.LogDebug($"Publish done.(message:{@event.Message})");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"事件发布异常。事件消息：{@event.Message}");
+                logger.LogError(ex, $"PublishMO error.(message:{@event.Message})");
             }
         }
 
@@ -134,11 +134,11 @@ namespace Liyanjie.FakeMQ
                     if (handler != null)
                         handlerObjects.Add(handlerType, handler);
                 }
-                logger.LogInformation($"添加事件订阅。订阅ID：{subscriptionId}");
+                logger.LogDebug($"SubscribeAsync done.(subscriptionId:{subscriptionId})");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"事件订阅异常。订阅ID：{subscriptionId}");
+                logger.LogError(ex, $"SubscribeAsync error.(subscriptionId:{subscriptionId})");
             }
         }
 
@@ -167,11 +167,11 @@ namespace Liyanjie.FakeMQ
                     if (handler != null)
                         handlerObjects.Add(handlerType, handler);
                 }
-                logger.LogInformation($"添加事件订阅。订阅ID：{subscriptionId}");
+                logger.LogDebug($"Subscribe done.(subscriptionId:{subscriptionId})");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"事件订阅异常。订阅ID：{subscriptionId}");
+                logger.LogError(ex, $"Subscribe error.(subscriptionId:{subscriptionId})");
             }
         }
 
@@ -195,11 +195,11 @@ namespace Liyanjie.FakeMQ
                 {
                     using var processStore = options.GetProcessStore(serviceProvider);
                     await processStore.DeleteAsync(subscriptionId);
-                    logger.LogInformation($"取消事件订阅。订阅ID：{subscriptionId}");
+                    logger.LogDebug($"UnsubscribeAsync done.(subscriptionId:{subscriptionId})");
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, $"取消订阅异常。订阅ID：{subscriptionId}");
+                    logger.LogError(ex, $"UnsubscribeAsync error.(subscriptionId:{subscriptionId})");
                 }
             }
         }
@@ -224,11 +224,11 @@ namespace Liyanjie.FakeMQ
                 {
                     using var processStore = options.GetProcessStore(serviceProvider);
                     processStore.Delete(subscriptionId);
-                    logger.LogInformation($"取消事件订阅。订阅ID：{subscriptionId}");
+                    logger.LogDebug($"Unsubscribe done.(subscriptionId:{subscriptionId})");
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, $"取消订阅异常。订阅ID：{subscriptionId}");
+                    logger.LogError(ex, $"Unsubscribe error.(subscriptionId:{subscriptionId})");
                 }
             }
         }
@@ -248,7 +248,7 @@ namespace Liyanjie.FakeMQ
                 return;
 
             IsHandling = true;
-            logger.LogTrace("Event handling start.");
+            logger.LogTrace("Event handling start");
 
             var endTimestamp = DateTimeOffset.Now.Ticks;
             using var processStore = options.GetProcessStore(serviceProvider);
@@ -278,7 +278,7 @@ namespace Liyanjie.FakeMQ
 
                     if (handler == null)
                     {
-                        logger.LogWarning($"Can not create instance of handlerType:{handlerType.FullName}.");
+                        logger.LogWarning($"Can not get instance.HandlerType:{handlerType.FullName}");
                         continue;
                     }
 
@@ -286,11 +286,11 @@ namespace Liyanjie.FakeMQ
                     var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
                     foreach (var @event in events)
                     {
-                        logger.LogDebug($"Handle begins.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
+                        logger.LogDebug($"Handling begins.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
 
                         var result = await (Task<bool>)method.Invoke(handler, new[] { options.Deserialize(@event.Message, messageType) });
 
-                        logger.LogDebug($"Handle result:{result}.");
+                        logger.LogDebug($"Handling result:{result}");
 
                         if (result)
                         {
@@ -308,7 +308,7 @@ namespace Liyanjie.FakeMQ
             }
 
             IsHandling = false;
-            logger.LogTrace("Event handling complte.");
+            logger.LogTrace("Event handling complte");
         }
 
         static string GetSubscriptionId(Type messageType, Type handlerType) => $"{messageType.Name}>{handlerType.FullName}";
