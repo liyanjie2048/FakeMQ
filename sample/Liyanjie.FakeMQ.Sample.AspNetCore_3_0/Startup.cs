@@ -30,9 +30,6 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore_3_0
             {
                 options.Serialize = @object => JsonSerializer.Serialize(@object);
                 options.Deserialize = (@string, type) => JsonSerializer.Deserialize(@string, type);
-            }, (db, timestamp) =>
-            {
-                return db.Database.ExecuteSqlRawAsync($"DELETE FROM [FakeMQEvents] WHERE [Timestamp]<{timestamp}");
             });
 
             services.AddRazorPages();

@@ -24,7 +24,11 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure
             context.FakeMQEvents.Add(@event);
             await context.SaveChangesAsync();
         }
-
+        public void Add(FakeMQEvent @event)
+        {
+            context.FakeMQEvents.Add(@event);
+            context.SaveChanges();
+        }
         public async Task<IEnumerable<FakeMQEvent>> GetAsync(string type, long startTimestamp, long endTimestamp)
         {
             return await context.FakeMQEvents.AsNoTracking()

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,15 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
 
             await context.SaveChangesAsync();
         }
+        public void Add(FakeMQProcess process)
+        {
+            if (context.FakeMQProcesses.Any(_ => _.Subscription == process.Subscription))
+                return;
+
+            context.FakeMQProcesses.Add(process);
+
+            context.SaveChanges();
+        }
         public async Task<FakeMQProcess> GetAsync(string subscription)
         {
             return await context.FakeMQProcesses.AsNoTracking()
@@ -51,6 +61,17 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
             context.FakeMQProcesses.Remove(item);
 
             await context.SaveChangesAsync();
+        }
+
+        public void Delete(string subscription)
+        {
+            var item = context.FakeMQProcesses.SingleOrDefault(_ => _.Subscription == subscription);
+            if (item == null)
+                return;
+
+            context.FakeMQProcesses.Remove(item);
+
+            context.SaveChanges();
         }
     }
 }

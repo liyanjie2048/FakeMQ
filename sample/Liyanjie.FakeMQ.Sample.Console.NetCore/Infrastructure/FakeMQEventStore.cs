@@ -25,6 +25,11 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
             context.FakeMQEvents.Add(@event);
             await context.SaveChangesAsync();
         }
+        public void Add(FakeMQEvent @event)
+        {
+            context.FakeMQEvents.Add(@event);
+            context.SaveChanges();
+        }
 
         public async Task<IEnumerable<FakeMQEvent>> GetAsync(string type, long startTimestamp, long endTimestamp)
         {
@@ -32,17 +37,6 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
                 .Where(_ => _.Type == type && _.Timestamp > startTimestamp && _.Timestamp < endTimestamp)
                 .OrderBy(_ => _.Timestamp)
                 .ToListAsync();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="timestamp"></param>
-        /// <returns></returns>
-        public async Task CleanAsync(long timestamp)
-        {
-            var sql = $"DELETE FROM [FakeMQEvents] WHERE [Timestamp]<{timestamp}";
-            await context.Database.ExecuteSqlRawAsync(sql);
         }
     }
 }
