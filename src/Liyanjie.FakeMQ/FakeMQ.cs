@@ -9,6 +9,7 @@ namespace Liyanjie.FakeMQ
     /// </summary>
     public sealed class FakeMQ
     {
+        static FakeMQOptions options;
         static FakeMQEventBus eventBus;
         static CancellationTokenSource stoppingCts;
         static Task executingTask;
@@ -21,12 +22,23 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="options"></param>
         /// <param name="eventBus"></param>
-        public static void Initialize(FakeMQEventBus eventBus)
+        public static void Initialize(FakeMQOptions options, FakeMQEventBus eventBus = null)
         {
-            FakeMQ.eventBus = eventBus;
+            FakeMQ.options = options;
+            FakeMQ.eventBus = eventBus ?? new FakeMQEventBus(options);
             FakeMQ.stoppingCts = new CancellationTokenSource();
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static bool IsProcessing { get; private set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public static DateTimeOffset LastLoopTime { get; set; }
 
         /// <summary>
         /// 
@@ -34,7 +46,7 @@ namespace Liyanjie.FakeMQ
         /// <returns></returns>
         public static Task StartAsync()
         {
-            executingTask = eventBus.ProcessAsync(stoppingCts.Token);
+            executingTask = ProcessAsync(stoppingCts.Token);
             if (executingTask.IsCompleted)
             {
                 return executingTask;
@@ -59,6 +71,31 @@ namespace Liyanjie.FakeMQ
                     await Task.WhenAny(executingTask, Task.Delay(-1));
                 }
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stoppingToken"></param>
+        /// <returns></returns>
+        static async Task ProcessAsync(CancellationToken stoppingToken)
+        {
+            if (IsProcessing)
+                return;
+
+            options.Log("Information", "FakeMQ process start.");
+
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                IsProcessing = true;
+
+                await eventBus.HandleAsync();
+
+                await Task.Delay(options.EventHandlingLoopTimeSpan);
+            }
+
+            IsProcessing = false;
+            options.Log("Information", "FakeMQ process stop.");
         }
 
         /// <summary>

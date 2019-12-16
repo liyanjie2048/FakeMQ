@@ -11,7 +11,7 @@ namespace Liyanjie.FakeMQ
         /// 序列化
         /// </summary>
         public Func<object, string> Serialize { get; set; }
-        
+
         /// <summary>
         /// 反序列化
         /// </summary>
@@ -22,7 +22,7 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         public Func<IServiceProvider, IFakeMQEventStore> GetEventStore { get; set; }
             = serviceProvider => serviceProvider.GetService(typeof(IFakeMQEventStore)) as IFakeMQEventStore;
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -30,13 +30,18 @@ namespace Liyanjie.FakeMQ
             = serviceProvider => serviceProvider.GetService(typeof(IFakeMQProcessStore)) as IFakeMQProcessStore;
 
         /// <summary>
-        /// 清理事件循环间隔
-        /// </summary>
-        public TimeSpan EventCleaningLoopTimeSpan { get; set; } = TimeSpan.FromMinutes(5);
-
-        /// <summary>
         /// 处理事件循环间隔
         /// </summary>
         public TimeSpan EventHandlingLoopTimeSpan { get; set; } = TimeSpan.FromMilliseconds(1000);
+
+        /// <summary>
+        /// (level:Trace|Debug|Information|Warning, message) => { }
+        /// </summary>
+        public Action<string, string> Log { get; set; } = (level, message) => { };
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Action<Exception, string> LogError { get; set; } = (level, exception) => { };
     }
 }

@@ -25,14 +25,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddTransient<IFakeMQEventStore, TEventStore>();
             services.AddTransient<IFakeMQProcessStore, TProcessStore>();
             services.Configure(configureOptions);
-            services.AddSingleton(serviceProvider =>
-            {
-                var eventBus = new FakeMQEventBus(serviceProvider);
-
-                FakeMQ.Initialize(eventBus);
-
-                return eventBus;
-            });
+            services.AddSingleton(serviceProvider => new FakeMQEventBus(serviceProvider));
 
             services.AddHostedService<FakeMQBackgroundService>();
 

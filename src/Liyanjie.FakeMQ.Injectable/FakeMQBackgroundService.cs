@@ -1,8 +1,9 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Liyanjie.FakeMQ
 {
@@ -14,10 +15,13 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="options"></param>
         /// <param name="eventBus"></param>
-        public FakeMQBackgroundService(FakeMQEventBus eventBus)
+        public FakeMQBackgroundService(
+            IOptions<FakeMQOptions> options,
+            FakeMQEventBus eventBus)
         {
-            FakeMQ.Initialize(eventBus);
+            FakeMQ.Initialize(options.Value, eventBus);
         }
 
         /// <summary>
