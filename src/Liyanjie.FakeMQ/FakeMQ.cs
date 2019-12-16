@@ -10,6 +10,7 @@ namespace Liyanjie.FakeMQ
     public sealed class FakeMQ
     {
         static FakeMQOptions options;
+        static FakeMQLogger logger;
         static FakeMQEventBus eventBus;
         static CancellationTokenSource stoppingCts;
         static Task executingTask;
@@ -23,11 +24,16 @@ namespace Liyanjie.FakeMQ
         /// 
         /// </summary>
         /// <param name="options"></param>
+        /// <param name="logger"></param>
         /// <param name="eventBus"></param>
-        public static void Initialize(FakeMQOptions options, FakeMQEventBus eventBus = null)
+        public static void Initialize(
+            FakeMQOptions options,
+            FakeMQLogger logger,
+            FakeMQEventBus eventBus = null)
         {
             FakeMQ.options = options;
-            FakeMQ.eventBus = eventBus ?? new FakeMQEventBus(options);
+            FakeMQ.logger = logger;
+            FakeMQ.eventBus = eventBus ?? new FakeMQEventBus(options, logger);
             FakeMQ.stoppingCts = new CancellationTokenSource();
         }
 
@@ -83,7 +89,7 @@ namespace Liyanjie.FakeMQ
             if (IsProcessing)
                 return;
 
-            options.Log("Information", "FakeMQ process start.");
+            logger.LogInformation("FakeMQ process start.");
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -92,11 +98,11 @@ namespace Liyanjie.FakeMQ
 
                 await eventBus.HandleAsync();
 
-                await Task.Delay(options.EventHandlingLoopTimeSpan);
+                await Task.Delay(options.LoopTimeSpan);
             }
 
             IsProcessing = false;
-            options.Log("Information", "FakeMQ process stop.");
+            logger.LogInformation("FakeMQ process stop.");
         }
 
         /// <summary>

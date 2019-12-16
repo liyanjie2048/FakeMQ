@@ -32,16 +32,6 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 处理事件循环间隔
         /// </summary>
-        public TimeSpan EventHandlingLoopTimeSpan { get; set; } = TimeSpan.FromMilliseconds(1000);
-
-        /// <summary>
-        /// (level:Trace|Debug|Information|Warning, message) => { }
-        /// </summary>
-        public Action<string, string> Log { get; set; } = (level, message) => { };
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public Action<Exception, string> LogError { get; set; } = (level, exception) => { };
+        public TimeSpan LoopTimeSpan { get; set; } = TimeSpan.FromMilliseconds(1000);
     }
 }
