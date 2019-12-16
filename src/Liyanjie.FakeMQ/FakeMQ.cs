@@ -88,6 +88,7 @@ namespace Liyanjie.FakeMQ
             while (!stoppingToken.IsCancellationRequested)
             {
                 IsProcessing = true;
+                LastLoopTime = DateTimeOffset.Now;
 
                 await eventBus.HandleAsync();
 
