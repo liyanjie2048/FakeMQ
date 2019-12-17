@@ -280,33 +280,36 @@ namespace Liyanjie.FakeMQ
                         continue;
                     }
 
-
-#if NET45
                     var handler = handlerObjects.ContainsKey(handlerType)
                         ? handlerObjects[handlerType]
                         : serviceProvider == null
                             ? Activator.CreateInstance(handlerType)
-                            : serviceProvider.GetServiceOrCreateInstance(handlerType);
-                    await _HandleAsync(messageType, handlerType, events, handler);
-#endif
-#if NETSTANDARD2_0||NETSTANDARD2_1
-                    if (handlerObjects.ContainsKey(handlerType))
+                            : GetServiceOrCreateInstance(serviceProvider, handlerType);
+
+                    if (handler == null)
                     {
-                        var handler = handlerObjects[handlerType];
-                        await _HandleAsync(messageType, handlerType, events, handler);
+                        logger.LogWarning($"Can not get instance.HandlerType:{handlerType.FullName}");
+                        continue;
                     }
-                    else if (serviceProvider != null)
+
+                    var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
+                    var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
+                    foreach (var @event in events)
                     {
-                        using var scope = serviceProvider.CreateScope();
-                        var handler = ActivatorUtilities.GetServiceOrCreateInstance(scope.ServiceProvider, handlerType);
-                        await _HandleAsync(messageType, handlerType, events, handler);
+                        logger.LogDebug($"Handling begins.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
+
+                        var result = await (Task<bool>)method.Invoke(handler, new[] { options.Deserialize(@event.Message, messageType) });
+
+                        logger.LogDebug($"Handling result:{result}");
+
+                        if (result)
+                        {
+                            await processStore.UpdateAsync(GetSubscriptionId(messageType, handlerType), @event.Timestamp);
+                            logger.LogDebug($"Handling process updated:{@event.Timestamp}");
+                        }
+
+                        await Task.Delay(100);
                     }
-                    else
-                    {
-                        var handler = Activator.CreateInstance(handlerType);
-                        await _HandleAsync(messageType, handlerType, events, handler);
-                    }
-#endif
                 }
                 catch (Exception ex)
                 {
@@ -316,34 +319,6 @@ namespace Liyanjie.FakeMQ
 
             IsHandling = false;
             logger.LogTrace("Event handling complte");
-
-            async Task _HandleAsync(Type messageType, Type handlerType, IEnumerable<FakeMQEvent> events, object handler)
-            {
-                if (handler == null)
-                {
-                    logger.LogWarning($"Can not get instance.HandlerType:{handlerType.FullName}");
-                    return;
-                }
-
-                var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
-                var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
-                foreach (var @event in events)
-                {
-                    logger.LogDebug($"Handling begins.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
-
-                    var result = await (Task<bool>)method.Invoke(handler, new[] { options.Deserialize(@event.Message, messageType) });
-
-                    logger.LogDebug($"Handling result:{result}");
-
-                    if (result)
-                    {
-                        await processStore.UpdateAsync(GetSubscriptionId(messageType, handlerType), @event.Timestamp);
-                        logger.LogDebug($"Handling process updated:{@event.Timestamp}");
-                    }
-
-                    await Task.Delay(100);
-                }
-            }
         }
 
         static string GetSubscriptionId(Type messageType, Type handlerType) => $"{messageType.Name}>{handlerType.FullName}";
