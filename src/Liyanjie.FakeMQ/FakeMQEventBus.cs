@@ -22,6 +22,8 @@ namespace Liyanjie.FakeMQ
         readonly IServiceProvider serviceProvider;
         readonly FakeMQOptions options;
         readonly FakeMQLogger logger;
+        readonly IFakeMQEventStore eventStore;
+        readonly IFakeMQProcessStore processStore;
 
         /// <summary>
         /// 
@@ -31,12 +33,20 @@ namespace Liyanjie.FakeMQ
         {
             this.serviceProvider = serviceProvider;
 #if NET45
-            this.options = serviceProvider.GetService(typeof(FakeMQOptions)) as FakeMQOptions;
-            this.logger = serviceProvider.GetService(typeof(FakeMQLogger)) as FakeMQLogger;
+            this.options = serviceProvider.GetService(typeof(FakeMQOptions)) as FakeMQOptions
+                ?? throw new Exception($"No service fro type '{nameof(FakeMQOptions)}' has been registered");
+            this.logger = serviceProvider.GetService(typeof(FakeMQLogger)) as FakeMQLogger
+                ?? throw new Exception($"No service fro type '{nameof(FakeMQLogger)}' has been registered");
+            this.eventStore = serviceProvider.GetService(typeof(IFakeMQEventStore)) as IFakeMQEventStore
+                ?? throw new Exception($"No service fro type '{nameof(IFakeMQEventStore)}' has been registered");
+            this.processStore = serviceProvider.GetService(typeof(IFakeMQProcessStore)) as IFakeMQProcessStore
+                ?? throw new Exception($"No service fro type '{nameof(IFakeMQProcessStore)}' has been registered");
 #endif
 #if NETSATNDARD2_0||NETSTANDARD2_1
             this.options = serviceProvider.GetRequiredService<IOptions<FakeMQOptions>>().Value;
             this.logger = serviceProvider.GetRequiredService<FakeMQLogger>();
+            this.eventStore = serviceProvider.GetRequiredService<IFakeMQEventStore>();
+            this.processStore = serviceProvider.GetRequiredService<IFakeMQProcessStore>();
 #endif
         }
 
@@ -45,10 +55,18 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <param name="options"></param>
         /// <param name="logger"></param>
-        public FakeMQEventBus(FakeMQOptions options, FakeMQLogger logger)
+        /// <param name="eventStore"></param>
+        /// <param name="processStore"></param>
+        public FakeMQEventBus(
+            FakeMQOptions options,
+            FakeMQLogger logger,
+            IFakeMQEventStore eventStore,
+            IFakeMQProcessStore processStore)
         {
             this.options = options;
             this.logger = logger;
+            this.eventStore = eventStore;
+            this.processStore = processStore;
         }
 
         /// <summary>
@@ -75,7 +93,6 @@ namespace Liyanjie.FakeMQ
             };
             try
             {
-                using var eventStore = options.GetEventStore(serviceProvider);
                 await eventStore.AddAsync(@event);
                 logger.LogDebug($"PublishAsync done.(message:{@event.Message})");
             }
@@ -99,7 +116,6 @@ namespace Liyanjie.FakeMQ
             };
             try
             {
-                using var eventStore = options.GetEventStore(serviceProvider);
                 eventStore.Add(@event);
                 logger.LogDebug($"Publish done.(message:{@event.Message})");
             }
@@ -123,7 +139,6 @@ namespace Liyanjie.FakeMQ
 
             try
             {
-                using var processStore = options.GetProcessStore(serviceProvider);
                 await processStore.AddAsync(new FakeMQProcess
                 {
                     Subscription = subscriptionId,
@@ -156,7 +171,6 @@ namespace Liyanjie.FakeMQ
 
             try
             {
-                using var processStore = options.GetProcessStore(serviceProvider);
                 processStore.Add(new FakeMQProcess
                 {
                     Subscription = subscriptionId,
@@ -193,7 +207,6 @@ namespace Liyanjie.FakeMQ
 
                 try
                 {
-                    using var processStore = options.GetProcessStore(serviceProvider);
                     await processStore.DeleteAsync(subscriptionId);
                     logger.LogDebug($"UnsubscribeAsync done.(subscriptionId:{subscriptionId})");
                 }
@@ -222,7 +235,6 @@ namespace Liyanjie.FakeMQ
 
                 try
                 {
-                    using var processStore = options.GetProcessStore(serviceProvider);
                     processStore.Delete(subscriptionId);
                     logger.LogDebug($"Unsubscribe done.(subscriptionId:{subscriptionId})");
                 }
@@ -251,8 +263,6 @@ namespace Liyanjie.FakeMQ
             logger.LogTrace("Event handling start");
 
             var endTimestamp = DateTimeOffset.Now.Ticks;
-            using var processStore = options.GetProcessStore(serviceProvider);
-            using var eventStore = options.GetEventStore(serviceProvider);
             foreach (var item in subscriptions)
             {
                 var messageType = item.Value;
@@ -270,36 +280,33 @@ namespace Liyanjie.FakeMQ
                         continue;
                     }
 
+
+#if NET45
                     var handler = handlerObjects.ContainsKey(handlerType)
                         ? handlerObjects[handlerType]
                         : serviceProvider == null
                             ? Activator.CreateInstance(handlerType)
-                            : GetServiceOrCreateInstance(serviceProvider, handlerType);
-
-                    if (handler == null)
+                            : serviceProvider.GetServiceOrCreateInstance(handlerType);
+                    await _HandleAsync(messageType, handlerType, events, handler);
+#endif
+#if NETSTANDARD2_0||NETSTANDARD2_1
+                    if (handlerObjects.ContainsKey(handlerType))
                     {
-                        logger.LogWarning($"Can not get instance.HandlerType:{handlerType.FullName}");
-                        continue;
+                        var handler = handlerObjects[handlerType];
+                        await _HandleAsync(messageType, handlerType, events, handler);
                     }
-
-                    var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
-                    var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
-                    foreach (var @event in events)
+                    else if (serviceProvider != null)
                     {
-                        logger.LogDebug($"Handling begins.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
-
-                        var result = await (Task<bool>)method.Invoke(handler, new[] { options.Deserialize(@event.Message, messageType) });
-
-                        logger.LogDebug($"Handling result:{result}");
-
-                        if (result)
-                        {
-                            await processStore.UpdateAsync(subscriptionId, @event.Timestamp);
-                            logger.LogDebug($"Update process:{@event.Timestamp}");
-                        }
-
-                        await Task.Delay(100);
+                        using var scope = serviceProvider.CreateScope();
+                        var handler = ActivatorUtilities.GetServiceOrCreateInstance(scope.ServiceProvider, handlerType);
+                        await _HandleAsync(messageType, handlerType, events, handler);
                     }
+                    else
+                    {
+                        var handler = Activator.CreateInstance(handlerType);
+                        await _HandleAsync(messageType, handlerType, events, handler);
+                    }
+#endif
                 }
                 catch (Exception ex)
                 {
@@ -309,6 +316,34 @@ namespace Liyanjie.FakeMQ
 
             IsHandling = false;
             logger.LogTrace("Event handling complte");
+
+            async Task _HandleAsync(Type messageType, Type handlerType, IEnumerable<FakeMQEvent> events, object handler)
+            {
+                if (handler == null)
+                {
+                    logger.LogWarning($"Can not get instance.HandlerType:{handlerType.FullName}");
+                    return;
+                }
+
+                var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
+                var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
+                foreach (var @event in events)
+                {
+                    logger.LogDebug($"Handling begins.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
+
+                    var result = await (Task<bool>)method.Invoke(handler, new[] { options.Deserialize(@event.Message, messageType) });
+
+                    logger.LogDebug($"Handling result:{result}");
+
+                    if (result)
+                    {
+                        await processStore.UpdateAsync(GetSubscriptionId(messageType, handlerType), @event.Timestamp);
+                        logger.LogDebug($"Handling process updated:{@event.Timestamp}");
+                    }
+
+                    await Task.Delay(100);
+                }
+            }
         }
 
         static string GetSubscriptionId(Type messageType, Type handlerType) => $"{messageType.Name}>{handlerType.FullName}";
@@ -317,7 +352,7 @@ namespace Liyanjie.FakeMQ
 #if NET45
             return serviceProvider.GetServiceOrCreateInstance(serviceType);
 #endif
-#if NETSATNDARD2_0||NETSTANDARD2_1
+#if NETSATNDARD2_0 || NETSTANDARD2_1
             return ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider.CreateScope().ServiceProvider, serviceType);
 #endif
             throw new NotImplementedException();

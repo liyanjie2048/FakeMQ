@@ -7,10 +7,6 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
 {
     public class DataContext : Microsoft.EntityFrameworkCore.DbContext
     {
-        public DataContext()
-            : base(new DbContextOptionsBuilder<DataContext>().UseSqlite(@"Data Source=.\Database.sqlite").Options)
-        { }
-
         public DbSet<FakeMQEvent> FakeMQEvents { get; set; }
         public DbSet<FakeMQProcess> FakeMQProcesses { get; set; }
 
@@ -24,6 +20,12 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
             modelBuilder.ApplyConfiguration(new FakeMQEventConfiguration());
             modelBuilder.ApplyConfiguration(new FakeMQProcessConfiguration());
             modelBuilder.ApplyConfiguration(new MessageConfiguration());
+        }
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            base.OnConfiguring(optionsBuilder);
+            optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+            optionsBuilder.UseSqlite(@"Data Source=.\Database.sqlite");
         }
     }
 }

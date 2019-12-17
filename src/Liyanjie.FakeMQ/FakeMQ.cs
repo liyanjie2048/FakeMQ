@@ -29,11 +29,11 @@ namespace Liyanjie.FakeMQ
         public static void Initialize(
             FakeMQOptions options,
             FakeMQLogger logger,
-            FakeMQEventBus eventBus = null)
+            FakeMQEventBus eventBus)
         {
-            FakeMQ.options = options;
-            FakeMQ.logger = logger;
-            FakeMQ.eventBus = eventBus ?? new FakeMQEventBus(options, logger);
+            FakeMQ.options = options ?? throw new ArgumentNullException(nameof(options));
+            FakeMQ.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            FakeMQ.eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
             FakeMQ.stoppingCts = new CancellationTokenSource();
         }
 

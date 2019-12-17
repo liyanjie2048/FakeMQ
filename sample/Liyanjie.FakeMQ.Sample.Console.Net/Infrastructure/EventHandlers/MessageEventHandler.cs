@@ -1,29 +1,23 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using Liyanjie.FakeMQ;
-
 using Liyanjie.FakeMQ.Sample.Console.Net.Models;
 
 namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure.EventHandlers
 {
-    public class MessageEventHandler : IFakeMQEventHandler<MessageEvent>, IDisposable
+    public class MessageEventHandler : IFakeMQEventHandler<MessageEvent>
     {
-        readonly DataContext context;
-        public MessageEventHandler(DataContext context)
+        readonly string dbConnectionString;
+        public MessageEventHandler(string dbConnectionString)
         {
-            this.context = context ?? throw new ArgumentNullException(nameof(context));
-        }
-
-        public void Dispose()
-        {
-            context?.Dispose();
+            this.dbConnectionString = dbConnectionString ?? throw new ArgumentNullException(nameof(dbConnectionString));
         }
 
         public async Task<bool> HandleAsync(MessageEvent @event)
         {
             try
             {
+                using var context = new DataContext(dbConnectionString);
                 context.Messages.Add(new Message
                 {
                     Content = @event.Message,

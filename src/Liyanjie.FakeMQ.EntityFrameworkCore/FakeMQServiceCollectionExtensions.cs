@@ -23,7 +23,7 @@ namespace Microsoft.Extensions.DependencyInjection
             Action<DbContextOptionsBuilder> configureDbContextOptions,
             Action<FakeMQOptions> configureFakeMQOptions)
         {
-            services.AddDbContext<FakeMQContext>(configureDbContextOptions, ServiceLifetime.Transient, ServiceLifetime.Singleton);
+            services.AddDbContext<FakeMQContext>(configureDbContextOptions);
             services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(configureFakeMQOptions);
 
             return services;

@@ -18,12 +18,13 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore_2_1
             services.AddLogging();
             services.AddDbContext<DataContext>(builder =>
             {
+                builder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
                 builder.UseSqlite(@"Data Source=.\Database.sqlite");
             });
-
-            services.AddFakeMQWithEFCore(options =>
+            services.AddFakeMQWithEFCore(builder =>
             {
-                options.UseSqlite(@"Data Source=.\FakeMQ.sqlite", sqlite => sqlite.MigrationsAssembly(typeof(Startup).Assembly.FullName));
+                builder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+                builder.UseSqlite(@"Data Source=.\FakeMQ.sqlite", sqlite => sqlite.MigrationsAssembly(typeof(Startup).Assembly.FullName));
             }, options =>
             {
                 options.Serialize = JsonConvert.SerializeObject;

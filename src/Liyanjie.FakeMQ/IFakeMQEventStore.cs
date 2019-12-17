@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Liyanjie.FakeMQ
@@ -7,7 +6,7 @@ namespace Liyanjie.FakeMQ
     /// <summary>
     /// 
     /// </summary>
-    public interface IFakeMQEventStore : IDisposable
+    public interface IFakeMQEventStore
     {
         /// <summary>
         /// 

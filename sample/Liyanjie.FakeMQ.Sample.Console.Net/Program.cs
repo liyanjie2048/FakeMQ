@@ -15,27 +15,28 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net
     {
         static async Task ShowMessagesAsync()
         {
-            using var db = GetDataContext();
+            using var context = new DataContext(ConnectionString);
             System.Console.WriteLine("################################");
-            foreach (var item in await db.Messages.ToListAsync())
+            foreach (var item in await context.Messages.ToListAsync())
             {
                 System.Console.WriteLine($"{item.Id}=>{item.Content}");
             }
             System.Console.WriteLine("################################");
             System.Console.WriteLine();
         }
-        static DataContext GetDataContext() => new DataContext(ConfigurationManager.ConnectionStrings["Sqlite"].ConnectionString);
+        static string ConnectionString =>  ConfigurationManager.ConnectionStrings["Sqlite"].ConnectionString;
 
         static async Task Main(string[] args)
         {
-            FakeMQ.Initialize(new FakeMQOptions
+            var options = new FakeMQOptions
             {
                 Serialize = JsonConvert.SerializeObject,
                 Deserialize = JsonConvert.DeserializeObject,
-                GetEventStore = serviceProvider => new FakeMQEventStore(GetDataContext()),
-                GetProcessStore = serviceProvider => new FakeMQProcessStore(GetDataContext())
-            }, new FakeMQLogger());
-            await FakeMQ.EventBus.SubscribeAsync<MessageEvent, MessageEventHandler>(new MessageEventHandler(GetDataContext()));
+            };
+            var logger= new FakeMQLogger();
+            var eventBus = new FakeMQEventBus(options, logger, new FakeMQEventStore(ConnectionString), new FakeMQProcessStore(ConnectionString));
+            FakeMQ.Initialize(options,logger,eventBus);
+            await FakeMQ.EventBus.SubscribeAsync<MessageEvent, MessageEventHandler>(new MessageEventHandler(ConnectionString));
 
             await FakeMQ.StartAsync();
 
