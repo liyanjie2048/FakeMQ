@@ -19,6 +19,7 @@ namespace Liyanjie.FakeMQ
     {
         readonly IDictionary<Type, Type> subscriptions = new Dictionary<Type, Type>();
         readonly IDictionary<Type, object> handlerObjects = new Dictionary<Type, object>();
+        readonly IDictionary<string, DateTimeOffset> processTimes = new Dictionary<string, DateTimeOffset>();
 
         readonly IServiceProvider serviceProvider;
         readonly FakeMQOptions options;
@@ -43,7 +44,7 @@ namespace Liyanjie.FakeMQ
             this.processStore = serviceProvider.GetService(typeof(IFakeMQProcessStore)) as IFakeMQProcessStore
                 ?? throw new Exception($"No service fro type '{nameof(IFakeMQProcessStore)}' has been registered");
 #endif
-#if NETSATNDARD2_0||NETSTANDARD2_1
+#if NETSATNDARD2_0 || NETSTANDARD2_1
             this.options = serviceProvider.GetRequiredService<IOptions<FakeMQOptions>>().Value;
             this.logger = serviceProvider.GetRequiredService<FakeMQLogger>();
             this.eventStore = serviceProvider.GetRequiredService<IFakeMQEventStore>();
@@ -95,11 +96,11 @@ namespace Liyanjie.FakeMQ
             try
             {
                 await eventStore.AddAsync(@event);
-                logger.LogDebug($"PublishAsync done.(message:{@event.Message})");
+                logger.LogDebug($"PublishAsync done.Message:{@event.Message}");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"PublishAsync error.(message:{@event.Message})");
+                logger.LogError( $"PublishAsync error.{ex.GetType().Name}({ex.Message}).Message:{@event.Message}");
             }
         }
 
@@ -118,11 +119,11 @@ namespace Liyanjie.FakeMQ
             try
             {
                 eventStore.Add(@event);
-                logger.LogDebug($"Publish done.(message:{@event.Message})");
+                logger.LogDebug($"Publish done.Message:{@event.Message}");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"PublishMO error.(message:{@event.Message})");
+                logger.LogError($"Publish error.{ex.GetType().Name}({ex.Message}).Message:{@event.Message}");
             }
         }
 
@@ -150,11 +151,11 @@ namespace Liyanjie.FakeMQ
                     if (handler != null)
                         handlerObjects.Add(handlerType, handler);
                 }
-                logger.LogDebug($"SubscribeAsync done.(subscriptionId:{subscriptionId})");
+                logger.LogDebug($"SubscribeAsync done.Subscription:{subscriptionId}");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"SubscribeAsync error.(subscriptionId:{subscriptionId})");
+                logger.LogError($"SubscribeAsync error.{ex.GetType().Name}({ex.Message}).Subscription:{subscriptionId}");
             }
         }
 
@@ -182,11 +183,11 @@ namespace Liyanjie.FakeMQ
                     if (handler != null)
                         handlerObjects.Add(handlerType, handler);
                 }
-                logger.LogDebug($"Subscribe done.(subscriptionId:{subscriptionId})");
+                logger.LogDebug($"Subscribe done.Subscription:{subscriptionId}");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Subscribe error.(subscriptionId:{subscriptionId})");
+                logger.LogError($"Subscribe error.{ex.GetType().Name}({ex.Message}).Subscription:{subscriptionId}");
             }
         }
 
@@ -209,11 +210,11 @@ namespace Liyanjie.FakeMQ
                 try
                 {
                     await processStore.DeleteAsync(subscriptionId);
-                    logger.LogDebug($"UnsubscribeAsync done.(subscriptionId:{subscriptionId})");
+                    logger.LogDebug($"UnsubscribeAsync done.Subscription:{subscriptionId}");
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, $"UnsubscribeAsync error.(subscriptionId:{subscriptionId})");
+                    logger.LogError($"UnsubscribeAsync error.{ex.GetType().Name}({ex.Message}).Subscription:{subscriptionId}");
                 }
             }
         }
@@ -237,11 +238,11 @@ namespace Liyanjie.FakeMQ
                 try
                 {
                     processStore.Delete(subscriptionId);
-                    logger.LogDebug($"Unsubscribe done.(subscriptionId:{subscriptionId})");
+                    logger.LogDebug($"Unsubscribe done.Subscription:{subscriptionId}");
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, $"Unsubscribe error.(subscriptionId:{subscriptionId})");
+                    logger.LogError($"Unsubscribe error.{ex.GetType().Name}({ex.Message}).Subscription:{subscriptionId}");
                 }
             }
         }
@@ -263,58 +264,49 @@ namespace Liyanjie.FakeMQ
             IsHandling = true;
             logger.LogTrace("Event handling start");
 
-            var endTimestamp = DateTimeOffset.Now.Ticks;
             foreach (var item in subscriptions)
             {
                 var messageType = item.Value;
                 var handlerType = item.Key;
-                var subscriptionId = GetSubscriptionId(messageType, handlerType);
 
-                try
-                {
-                    var startTimestamp = (await processStore.GetAsync(subscriptionId)).Timestamp;
+                var events = await GetEventsAsync(messageType, handlerType);
+                if (events.IsNullOrEmpty())
+                    continue;
 
-                    var events = await eventStore.GetAsync(messageType.Name, startTimestamp, endTimestamp);
-                    if (events.IsNullOrEmpty())
-                    {
-                        await processStore.UpdateAsync(subscriptionId, endTimestamp);
-                        continue;
-                    }
-
-                    var handler = handlerObjects.ContainsKey(handlerType)
+                var handler = handlerObjects.ContainsKey(handlerType)
                         ? handlerObjects[handlerType]
                         : serviceProvider == null
                             ? Activator.CreateInstance(handlerType)
                             : GetServiceOrCreateInstance(serviceProvider, handlerType);
+                if (handler == null)
+                {
+                    logger.LogWarning($"Can't get handler.HandlerType:{handlerType.FullName}");
+                    continue;
+                }
 
-                    if (handler == null)
+                var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
+                var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
+                foreach (var @event in events)
+                {
+                    logger.LogDebug($"Handling begins.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
+
+                    bool result;
+                    try
                     {
-                        logger.LogWarning($"Can not get instance.HandlerType:{handlerType.FullName}");
-                        continue;
-                    }
-
-                    var concreteType = typeof(IFakeMQEventHandler<>).MakeGenericType(messageType);
-                    var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
-                    foreach (var @event in events)
-                    {
-                        logger.LogDebug($"Handling begins.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
-
-                        var result = await (Task<bool>)method.Invoke(handler, new[] { options.Deserialize(@event.Message, messageType) });
+                        result = await (Task<bool>)method.Invoke(handler, new[] { options.Deserialize(@event.Message, messageType) });
 
                         logger.LogDebug($"Handling result:{result}");
-
-                        if (result)
-                        {
-                            await processStore.UpdateAsync(GetSubscriptionId(messageType, handlerType), @event.Timestamp);
-                            logger.LogDebug($"Handling process updated:{@event.Timestamp}");
-                        }
-
-                        await Task.Delay(100);
                     }
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, $"Handling error:{ex.Message}.(handlerType:{handlerType.FullName},messageType:{messageType.FullName})");
+                    catch (Exception ex)
+                    {
+                        logger.LogError($"Handling error:{ex.GetType().Name}({ex.Message})");
+                        break;
+                    }
+
+                    if (result)
+                        await UpdateProcessTimeAsync(GetSubscriptionId(messageType, handlerType), @event.CreateTime);
+
+                    await Task.Delay(100);
                 }
             }
 
@@ -322,16 +314,67 @@ namespace Liyanjie.FakeMQ
             logger.LogTrace("Event handling complte");
         }
 
+        async Task<IEnumerable<FakeMQEvent>> GetEventsAsync(Type messageType, Type handlerType)
+        {
+            var subscriptionId = GetSubscriptionId(messageType, handlerType);
+            try
+            {
+                var fromTime = await GetProcessTimeAsync(subscriptionId);
+                var toTime = DateTimeOffset.Now;
+
+                return await eventStore.GetAsync(messageType.Name, fromTime, toTime);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Events getting error:{ex.GetType().Name}({ex.Message})");
+                return null;
+            }
+        }
+        async Task<DateTimeOffset> GetProcessTimeAsync(string subscriptionId)
+        {
+            if (processTimes.ContainsKey(subscriptionId))
+            {
+                try
+                {
+                    processTimes[subscriptionId] = (await processStore.GetAsync(subscriptionId)).LastHandleTime;
+                }
+                catch
+                {
+                    return DateTimeOffset.MaxValue;
+                }
+            }
+            return processTimes[subscriptionId];
+        }
+        async Task UpdateProcessTimeAsync(string subscriptionId, DateTimeOffset handleTime)
+        {
+            processTimes[subscriptionId] = handleTime;
+            try
+            {
+                logger.LogDebug($"Process updating begins.Handle time:{handleTime.ToString("yyyy-MM-dd HH:mm:ss.fffffff ZZ")}");
+                await processStore.UpdateAsync(subscriptionId, handleTime);
+                logger.LogDebug($"Process updating done");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Process updating error:{ex.GetType().Name}({ex.Message})");
+            }
+        }
+
         static string GetSubscriptionId(Type messageType, Type handlerType) => $"{messageType.Name}>{handlerType.FullName}";
         static object GetServiceOrCreateInstance(IServiceProvider serviceProvider, Type serviceType)
         {
+            try
+            {
 #if NET45
-            return serviceProvider.GetServiceOrCreateInstance(serviceType);
+                return serviceProvider.GetServiceOrCreateInstance(serviceType);
 #endif
 #if NETSATNDARD2_0 || NETSTANDARD2_1
-            return ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider.CreateScope().ServiceProvider, serviceType);
+                return ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider.CreateScope().ServiceProvider, serviceType);
 #endif
-            throw new NotImplementedException();
+            }
+            catch (Exception) { }
+
+            return null;
         }
     }
 }

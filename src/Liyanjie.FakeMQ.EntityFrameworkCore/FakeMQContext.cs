@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Liyanjie.FakeMQ
 {
@@ -36,11 +38,16 @@ namespace Liyanjie.FakeMQ
             fakeMQEventTypeBuilder.HasKey(_ => _.Id);
             fakeMQEventTypeBuilder.Property(_ => _.Type).HasMaxLength(50);
             fakeMQEventTypeBuilder.HasIndex(_ => _.Type);
-            fakeMQEventTypeBuilder.HasIndex(_ => _.Timestamp);
+            fakeMQEventTypeBuilder.HasIndex(_ => _.CreateTime);
 
             var fakeMQProcessTypeBuilder = modelBuilder.Entity<FakeMQProcess>();
             fakeMQProcessTypeBuilder.HasKey(_ => _.Subscription);
             fakeMQProcessTypeBuilder.Property(_ => _.Subscription).HasMaxLength(200);
+        }
+
+        internal static FakeMQContext GetContext(IServiceProvider serviceProvider)
+        {
+            return serviceProvider.CreateScope().ServiceProvider.GetRequiredService<FakeMQContext>();
         }
     }
 }

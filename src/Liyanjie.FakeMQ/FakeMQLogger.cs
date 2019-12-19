@@ -92,15 +92,14 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="exception"></param>
         /// <param name="message"></param>
-        public void LogError(Exception exception, string message)
+        public void LogError(string message)
         {
 #if NET45
-            logger?.Error(exception, message);
+            logger?.Error(message);
 #endif
 #if NETSTANDARD2_0||NETSTANDARD2_1
-            logger?.LogError(exception, message);
+            logger?.LogError(message);
 #endif
         }
 

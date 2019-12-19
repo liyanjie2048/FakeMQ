@@ -26,13 +26,21 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure
             context.FakeMQEvents.Add(@event);
             context.SaveChanges();
         }
-        public async Task<IEnumerable<FakeMQEvent>> GetAsync(string type, long startTimestamp, long endTimestamp)
+        public async Task<IEnumerable<FakeMQEvent>> GetAsync(string type, DateTimeOffset fromTime, DateTimeOffset toTime)
         {
             using var context = new DataContext(dbConnectionString);
             return await context.FakeMQEvents.AsNoTracking()
-                .Where(_ => _.Type == type && _.Timestamp > startTimestamp && _.Timestamp < endTimestamp)
-                .OrderBy(_ => _.Timestamp)
+                .Where(_ => _.Type == type && _.CreateTime > fromTime && _.CreateTime < toTime)
+                .OrderBy(_ => _.CreateTime)
                 .ToListAsync();
+        }
+        public IEnumerable<FakeMQEvent> Get(string type, DateTimeOffset fromTime, DateTimeOffset toTime)
+        {
+            using var context = new DataContext(dbConnectionString);
+            return context.FakeMQEvents.AsNoTracking()
+                .Where(_ => _.Type == type && _.CreateTime > fromTime && _.CreateTime < toTime)
+                .OrderBy(_ => _.CreateTime)
+                .ToList();
         }
     }
 }

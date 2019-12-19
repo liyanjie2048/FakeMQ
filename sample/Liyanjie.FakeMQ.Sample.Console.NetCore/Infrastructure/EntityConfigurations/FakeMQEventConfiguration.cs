@@ -14,7 +14,7 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure.EntityConfigurat
             builder.HasKey(_ => _.Id);
 
             builder.HasIndex(_ => _.Type);
-            builder.HasIndex(_ => _.Timestamp);
+            builder.HasIndex(_ => _.CreateTime);
         }
     }
 }

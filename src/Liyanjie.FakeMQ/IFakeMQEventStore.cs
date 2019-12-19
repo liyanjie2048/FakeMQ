@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Liyanjie.FakeMQ
@@ -25,9 +26,18 @@ namespace Liyanjie.FakeMQ
         /// 
         /// </summary>
         /// <param name="type"></param>
-        /// <param name="startTimestamp"></param>
-        /// <param name="endTimestamp"></param>
+        /// <param name="fromTime"></param>
+        /// <param name="toTime"></param>
         /// <returns></returns>
-        Task<IEnumerable<FakeMQEvent>> GetAsync(string type, long startTimestamp,long endTimestamp);
+        Task<IEnumerable<FakeMQEvent>> GetAsync(string type, DateTimeOffset fromTime, DateTimeOffset toTime);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="fromTime"></param>
+        /// <param name="toTime"></param>
+        /// <returns></returns>
+        IEnumerable<FakeMQEvent> Get(string type, DateTimeOffset fromTime, DateTimeOffset toTime);
     }
 }

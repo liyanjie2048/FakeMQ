@@ -15,6 +15,6 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 
         /// </summary>
-        public long Timestamp { get; set; } = DateTimeOffset.Now.Ticks;
+        public DateTimeOffset LastHandleTime { get; set; } = DateTimeOffset.Now;
     }
 }

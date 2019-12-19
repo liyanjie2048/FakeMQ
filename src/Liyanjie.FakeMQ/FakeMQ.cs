@@ -66,16 +66,16 @@ namespace Liyanjie.FakeMQ
         /// <returns></returns>
         public static async Task StopAsync()
         {
-            if (executingTask != null)
+            if (executingTask == null)
+                return;
+
+            try
             {
-                try
-                {
-                    stoppingCts.Cancel();
-                }
-                finally
-                {
-                    await Task.WhenAny(executingTask, Task.Delay(-1));
-                }
+                stoppingCts.Cancel();
+            }
+            finally
+            {
+                await Task.WhenAny(executingTask, Task.Delay(-1));
             }
         }
 

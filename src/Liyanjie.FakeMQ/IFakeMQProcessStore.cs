@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace Liyanjie.FakeMQ
 {
@@ -31,9 +32,23 @@ namespace Liyanjie.FakeMQ
         /// 
         /// </summary>
         /// <param name="subscription"></param>
-        /// <param name="timestamp"></param>
         /// <returns></returns>
-        Task UpdateAsync(string subscription, long timestamp);
+        FakeMQProcess Get(string subscription);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="subscription"></param>
+        /// <param name="handleTime"></param>
+        /// <returns></returns>
+        Task UpdateAsync(string subscription, DateTimeOffset handleTime);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="subscription"></param>
+        /// <param name="handleTime"></param>
+        void Update(string subscription, DateTimeOffset handleTime);
 
         /// <summary>
         /// 

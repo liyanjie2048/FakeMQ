@@ -35,14 +35,29 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure
             return await context.FakeMQProcesses.AsNoTracking()
                 .SingleOrDefaultAsync(_ => _.Subscription == subscription);
         }
-        public async Task UpdateAsync(string subscription, long timestamp)
+        public FakeMQProcess Get(string subscription)
+        {
+            using var context = new DataContext(dbConnectionString);
+            return context.FakeMQProcesses.AsNoTracking()
+                .SingleOrDefault(_ => _.Subscription == subscription);
+        }
+        public async Task UpdateAsync(string subscription, DateTimeOffset handleTime)
         {
             using var context = new DataContext(dbConnectionString);
             var item = await context.FakeMQProcesses.SingleOrDefaultAsync(_ => _.Subscription == subscription);
             if (item == null)
                 return;
-            item.Timestamp = timestamp;
+            item.LastHandleTime = handleTime;
             await context.SaveChangesAsync();
+        }
+        public void Update(string subscription, DateTimeOffset handleTime)
+        {
+            using var context = new DataContext(dbConnectionString);
+            var item = context.FakeMQProcesses.SingleOrDefault(_ => _.Subscription == subscription);
+            if (item == null)
+                return;
+            item.LastHandleTime = handleTime;
+            context.SaveChangesAsync();
         }
         public async Task DeleteAsync(string subscription)
         {

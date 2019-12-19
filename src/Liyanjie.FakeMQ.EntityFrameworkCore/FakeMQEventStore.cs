@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Liyanjie.FakeMQ
 {
@@ -27,8 +26,7 @@ namespace Liyanjie.FakeMQ
         /// <inheritdoc />
         public async Task AddAsync(FakeMQEvent @event)
         {
-            using var scope = serviceProvider.CreateScope();
-            using var context = scope.ServiceProvider.GetRequiredService<FakeMQContext>();
+            using var context = FakeMQContext.GetContext(serviceProvider);
             context.FakeMQEvents.Add(@event);
             await context.SaveChangesAsync();
         }
@@ -36,22 +34,31 @@ namespace Liyanjie.FakeMQ
         /// <inheritdoc />
         public void Add(FakeMQEvent @event)
         {
-            using var scope = serviceProvider.CreateScope();
-            using var context = scope.ServiceProvider.GetRequiredService<FakeMQContext>();
+            using var context = FakeMQContext.GetContext(serviceProvider);
             context.FakeMQEvents.Add(@event);
             context.SaveChanges();
         }
 
         /// <inheritdoc />
-        public async Task<IEnumerable<FakeMQEvent>> GetAsync(string type, long startTimestamp, long endTimestamp)
+        public async Task<IEnumerable<FakeMQEvent>> GetAsync(string type, DateTimeOffset fromTime, DateTimeOffset toTime)
         {
-            using var scope = serviceProvider.CreateScope();
-            using var context = scope.ServiceProvider.GetRequiredService<FakeMQContext>();
+            using var context = FakeMQContext.GetContext(serviceProvider);
             return await context.FakeMQEvents
                 .AsNoTracking()
-                .Where(_ => _.Type == type && _.Timestamp > startTimestamp && _.Timestamp <= endTimestamp)
-                .OrderBy(_ => _.Timestamp)
+                .Where(_ => _.Type == type && _.CreateTime > fromTime && _.CreateTime <= toTime)
+                .OrderBy(_ => _.CreateTime)
                 .ToListAsync();
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<FakeMQEvent> Get(string type, DateTimeOffset fromTime, DateTimeOffset toTime)
+        {
+            using var context = FakeMQContext.GetContext(serviceProvider);
+            return context.FakeMQEvents
+                .AsNoTracking()
+                .Where(_ => _.Type == type && _.CreateTime > fromTime && _.CreateTime <= toTime)
+                .OrderBy(_ => _.CreateTime)
+                .ToList();
         }
     }
 }
