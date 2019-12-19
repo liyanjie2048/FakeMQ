@@ -21,11 +21,13 @@ namespace Liyanjie.FakeMQ
         readonly IDictionary<Type, object> handlerObjects = new Dictionary<Type, object>();
         readonly IDictionary<string, DateTimeOffset> processTimes = new Dictionary<string, DateTimeOffset>();
 
-        readonly IServiceProvider serviceProvider;
         readonly FakeMQOptions options;
         readonly FakeMQLogger logger;
         readonly IFakeMQEventStore eventStore;
         readonly IFakeMQProcessStore processStore;
+
+#if NETSTANDARD2_0 || NETSTANDARD2_1
+        readonly IServiceProvider serviceProvider;
 
         /// <summary>
         /// 
@@ -34,23 +36,12 @@ namespace Liyanjie.FakeMQ
         public FakeMQEventBus(IServiceProvider serviceProvider)
         {
             this.serviceProvider = serviceProvider;
-#if NET45
-            this.options = serviceProvider.GetService(typeof(FakeMQOptions)) as FakeMQOptions
-                ?? throw new Exception($"No service fro type '{nameof(FakeMQOptions)}' has been registered");
-            this.logger = serviceProvider.GetService(typeof(FakeMQLogger)) as FakeMQLogger
-                ?? throw new Exception($"No service fro type '{nameof(FakeMQLogger)}' has been registered");
-            this.eventStore = serviceProvider.GetService(typeof(IFakeMQEventStore)) as IFakeMQEventStore
-                ?? throw new Exception($"No service fro type '{nameof(IFakeMQEventStore)}' has been registered");
-            this.processStore = serviceProvider.GetService(typeof(IFakeMQProcessStore)) as IFakeMQProcessStore
-                ?? throw new Exception($"No service fro type '{nameof(IFakeMQProcessStore)}' has been registered");
-#endif
-#if NETSATNDARD2_0 || NETSTANDARD2_1
             this.options = serviceProvider.GetRequiredService<IOptions<FakeMQOptions>>().Value;
             this.logger = serviceProvider.GetRequiredService<FakeMQLogger>();
             this.eventStore = serviceProvider.GetRequiredService<IFakeMQEventStore>();
             this.processStore = serviceProvider.GetRequiredService<IFakeMQProcessStore>();
-#endif
         }
+#endif
 
         /// <summary>
         /// 
@@ -100,7 +91,7 @@ namespace Liyanjie.FakeMQ
             }
             catch (Exception ex)
             {
-                logger.LogError( $"PublishAsync error.{ex.GetType().Name}({ex.Message}).Message:{@event.Message}");
+                logger.LogError($"PublishAsync error.{ex.GetType().Name}({ex.Message}).Message:{@event.Message}");
             }
         }
 
@@ -273,11 +264,7 @@ namespace Liyanjie.FakeMQ
                 if (events.IsNullOrEmpty())
                     continue;
 
-                var handler = handlerObjects.ContainsKey(handlerType)
-                        ? handlerObjects[handlerType]
-                        : serviceProvider == null
-                            ? Activator.CreateInstance(handlerType)
-                            : GetServiceOrCreateInstance(serviceProvider, handlerType);
+                var handler = CreateHandler(handlerType);
                 if (handler == null)
                 {
                     logger.LogWarning($"Can't get handler.HandlerType:{handlerType.FullName}");
@@ -330,6 +317,20 @@ namespace Liyanjie.FakeMQ
                 return null;
             }
         }
+        object CreateHandler(Type handlerType)
+        {
+            var handler = handlerObjects.ContainsKey(handlerType) ? handlerObjects[handlerType] : null;
+            if (handler == null)
+            {
+#if NET45
+                handler = Activator.CreateInstance(handlerType);
+#endif
+#if NETSTANDARD2_0 || NETSTANDARD2_1
+                handler = ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider.CreateScope().ServiceProvider, handlerType);
+#endif
+            }
+            return handler;
+        }
         async Task<DateTimeOffset> GetProcessTimeAsync(string subscriptionId)
         {
             if (processTimes.ContainsKey(subscriptionId))
@@ -361,20 +362,5 @@ namespace Liyanjie.FakeMQ
         }
 
         static string GetSubscriptionId(Type messageType, Type handlerType) => $"{messageType.Name}>{handlerType.FullName}";
-        static object GetServiceOrCreateInstance(IServiceProvider serviceProvider, Type serviceType)
-        {
-            try
-            {
-#if NET45
-                return serviceProvider.GetServiceOrCreateInstance(serviceType);
-#endif
-#if NETSATNDARD2_0 || NETSTANDARD2_1
-                return ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider.CreateScope().ServiceProvider, serviceType);
-#endif
-            }
-            catch (Exception) { }
-
-            return null;
-        }
     }
 }
