@@ -275,14 +275,16 @@ namespace Liyanjie.FakeMQ
                 var method = concreteType.GetTypeInfo().GetMethod(nameof(IFakeMQEventHandler<object>.HandleAsync));
                 foreach (var @event in events)
                 {
-                    logger.LogDebug($"Handling begins.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
+                    logger.LogDebug($"Handling starts.(handlerType:{handlerType.FullName},messageType:{messageType.FullName},message:{@event.Message})");
 
-                    bool result;
                     try
                     {
-                        result = await (Task<bool>)method.Invoke(handler, new[] { options.Deserialize(@event.Message, messageType) });
+                        var result = await (Task<bool>)method.Invoke(handler, new[] { options.Deserialize(@event.Message, messageType) });
 
                         logger.LogDebug($"Handling result:{result}");
+
+                        if (result)
+                            await UpdateProcessTimeAsync(GetSubscriptionId(messageType, handlerType), @event.CreateTime);
                     }
                     catch (Exception ex)
                     {
@@ -290,10 +292,7 @@ namespace Liyanjie.FakeMQ
                         break;
                     }
 
-                    if (result)
-                        await UpdateProcessTimeAsync(GetSubscriptionId(messageType, handlerType), @event.CreateTime);
-
-                    await Task.Delay(100);
+                    await Task.Delay(50);
                 }
             }
 
@@ -343,7 +342,7 @@ namespace Liyanjie.FakeMQ
             processTimes[subscriptionId] = handleTime;
             try
             {
-                logger.LogDebug($"Process updating begins.Handle time:{handleTime.ToString("yyyy-MM-dd HH:mm:ss.fffffff ZZ")}");
+                logger.LogDebug($"Process updating starts.Handle time:{handleTime.ToString("yyyy-MM-dd HH:mm:ss.fffffff ZZ")}");
                 await processStore.UpdateAsync(subscriptionId, handleTime);
                 logger.LogDebug($"Process updating done");
             }
