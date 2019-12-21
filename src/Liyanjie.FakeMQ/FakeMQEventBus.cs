@@ -342,7 +342,7 @@ namespace Liyanjie.FakeMQ
             processTimes[subscriptionId] = handleTime;
             try
             {
-                logger.LogDebug($"Process updating starts.Handle time:{handleTime.ToString("yyyy-MM-dd HH:mm:ss.fffffff ZZ")}");
+                logger.LogDebug($"Process updating starts.Handle time:{handleTime.ToString("yyyy-MM-dd HH:mm:ss.fffffff zzz")}");
                 await processStore.UpdateAsync(subscriptionId, handleTime);
                 logger.LogDebug($"Process updating done");
             }
