@@ -333,7 +333,7 @@ namespace Liyanjie.FakeMQ
         }
         async Task<DateTimeOffset> GetProcessTimeAsync(string subscriptionId)
         {
-            if (processTimes.ContainsKey(subscriptionId))
+            if (!processTimes.ContainsKey(subscriptionId))
             {
                 try
                 {
