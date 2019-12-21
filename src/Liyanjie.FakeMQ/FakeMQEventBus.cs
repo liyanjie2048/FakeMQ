@@ -334,16 +334,8 @@ namespace Liyanjie.FakeMQ
         async Task<DateTimeOffset> GetProcessTimeAsync(string subscriptionId)
         {
             if (!processTimes.ContainsKey(subscriptionId))
-            {
-                try
-                {
-                    processTimes[subscriptionId] = (await processStore.GetAsync(subscriptionId)).LastHandleTime;
-                }
-                catch
-                {
-                    return DateTimeOffset.MaxValue;
-                }
-            }
+                processTimes[subscriptionId] = (await processStore.GetAsync(subscriptionId)).LastHandleTime;
+
             return processTimes[subscriptionId];
         }
         async Task UpdateProcessTimeAsync(string subscriptionId, DateTimeOffset handleTime)
