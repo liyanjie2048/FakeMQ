@@ -1,6 +1,5 @@
 ﻿using System.Data.Entity;
 
-using Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure.EntityConfigurations;
 using Liyanjie.FakeMQ.Sample.Console.Net.Models;
 
 namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure
@@ -22,9 +21,21 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Configurations.Add(new FakeMQEventConfiguration());
-            modelBuilder.Configurations.Add(new FakeMQProcessConfiguration());
-            modelBuilder.Configurations.Add(new MessageConfiguration());
+            var fakeMQEventTypeBuilder = modelBuilder.Entity<FakeMQEvent>();
+            fakeMQEventTypeBuilder.HasKey(_ => _.Id);
+            fakeMQEventTypeBuilder.Property(_ => _.Type).IsRequired().HasMaxLength(50);
+            fakeMQEventTypeBuilder.Property(_ => _.Message).IsRequired();
+            fakeMQEventTypeBuilder.HasIndex(_ => _.Type);
+            fakeMQEventTypeBuilder.HasIndex(_ => _.CreateTime);
+
+            var fakeMQProcessTypeBuilder = modelBuilder.Entity<FakeMQProcess>();
+            fakeMQProcessTypeBuilder.HasKey(_ => _.HandlerType);
+            fakeMQProcessTypeBuilder.Property(_ => _.HandlerType).HasMaxLength(200);
+            fakeMQProcessTypeBuilder.Property(_ => _.MessageType).IsRequired().HasMaxLength(200);
+
+            var messageTypeBuilder = modelBuilder.Entity<Message>();
+            messageTypeBuilder.HasKey(_ => _.Id);
+            messageTypeBuilder.Property(_ => _.Content).HasMaxLength(500);
         }
     }
 }

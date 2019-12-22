@@ -24,43 +24,43 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="subscription"></param>
+        /// <param name="handlerType"></param>
         /// <returns></returns>
-        Task<FakeMQProcess> GetAsync(string subscription);
+        Task<FakeMQProcess> GetAsync(string handlerType);
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="subscription"></param>
+        /// <param name="handlerType"></param>
         /// <returns></returns>
-        FakeMQProcess Get(string subscription);
+        FakeMQProcess Get(string handlerType);
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="subscription"></param>
+        /// <param name="handlerType"></param>
         /// <param name="handleTime"></param>
         /// <returns></returns>
-        Task UpdateAsync(string subscription, DateTimeOffset handleTime);
+        Task UpdateAsync(string handlerType, DateTimeOffset handleTime);
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="subscription"></param>
+        /// <param name="handlerType"></param>
         /// <param name="handleTime"></param>
-        void Update(string subscription, DateTimeOffset handleTime);
+        void Update(string handlerType, DateTimeOffset handleTime);
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="subscription"></param>
+        /// <param name="handlerType"></param>
         /// <returns></returns>
-        Task DeleteAsync(string subscription);
+        Task DeleteAsync(string handlerType);
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="subscription"></param>
-        void Delete(string subscription);
+        /// <param name="handlerType"></param>
+        void Delete(string handlerType);
     }
 }

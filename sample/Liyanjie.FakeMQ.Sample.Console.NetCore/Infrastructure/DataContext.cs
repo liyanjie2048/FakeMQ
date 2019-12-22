@@ -1,5 +1,4 @@
-﻿using Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure.EntityConfigurations;
-using Liyanjie.FakeMQ.Sample.Console.NetCore.Models;
+﻿using Liyanjie.FakeMQ.Sample.Console.NetCore.Models;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -17,10 +16,23 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.ApplyConfiguration(new FakeMQEventConfiguration());
-            modelBuilder.ApplyConfiguration(new FakeMQProcessConfiguration());
-            modelBuilder.ApplyConfiguration(new MessageConfiguration());
+            var fakeMQEventTypeBuilder = modelBuilder.Entity<FakeMQEvent>();
+            fakeMQEventTypeBuilder.HasKey(_ => _.Id);
+            fakeMQEventTypeBuilder.Property(_ => _.Type).IsRequired().HasMaxLength(50);
+            fakeMQEventTypeBuilder.Property(_ => _.Message).IsRequired();
+            fakeMQEventTypeBuilder.HasIndex(_ => _.Type);
+            fakeMQEventTypeBuilder.HasIndex(_ => _.CreateTime);
+
+            var fakeMQProcessTypeBuilder = modelBuilder.Entity<FakeMQProcess>();
+            fakeMQProcessTypeBuilder.HasKey(_ => _.HandlerType);
+            fakeMQProcessTypeBuilder.Property(_ => _.HandlerType).HasMaxLength(200);
+            fakeMQProcessTypeBuilder.Property(_ => _.MessageType).IsRequired().HasMaxLength(200);
+
+            var messageTypeBuilder = modelBuilder.Entity<Message>();
+            messageTypeBuilder.HasKey(_ => _.Id);
+            messageTypeBuilder.Property(_ => _.Content).HasMaxLength(500);
         }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);

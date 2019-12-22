@@ -10,7 +10,12 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 
         /// </summary>
-        public string Subscription { get; set; }
+        public string HandlerType { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string MessageType { get; set; }
 
         /// <summary>
         /// 

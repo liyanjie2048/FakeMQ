@@ -27,7 +27,7 @@ namespace Liyanjie.FakeMQ
         public async Task AddAsync(FakeMQProcess process)
         {
             using var context = FakeMQContext.GetContext(serviceProvider);
-            if (await context.FakeMQProcesses.AnyAsync(_ => _.Subscription == process.Subscription))
+            if (await context.FakeMQProcesses.AnyAsync(_ => _.HandlerType == process.HandlerType))
                 return;
             context.FakeMQProcesses.Add(process);
             await context.SaveChangesAsync();
@@ -37,37 +37,37 @@ namespace Liyanjie.FakeMQ
         public void Add(FakeMQProcess process)
         {
             using var context = FakeMQContext.GetContext(serviceProvider);
-            if (context.FakeMQProcesses.Any(_ => _.Subscription == process.Subscription))
+            if (context.FakeMQProcesses.Any(_ => _.HandlerType == process.HandlerType))
                 return;
             context.FakeMQProcesses.Add(process);
             context.SaveChanges();
         }
 
         /// <inheritdoc />
-        public async Task<FakeMQProcess> GetAsync(string subscription)
+        public async Task<FakeMQProcess> GetAsync(string handlerType)
         {
             using var context = FakeMQContext.GetContext(serviceProvider);
             return await context.FakeMQProcesses
                 .AsNoTracking()
-                .FirstOrDefaultAsync(_ => _.Subscription == subscription);
+                .FirstOrDefaultAsync(_ => _.HandlerType == handlerType);
         }
 
         /// <inheritdoc />
-        public FakeMQProcess Get(string subscription)
+        public FakeMQProcess Get(string handlerType)
         {
             using var context = FakeMQContext.GetContext(serviceProvider);
             return context.FakeMQProcesses
                 .AsNoTracking()
-                .FirstOrDefault(_ => _.Subscription == subscription);
+                .FirstOrDefault(_ => _.HandlerType == handlerType);
         }
 
         /// <inheritdoc />
-        public async Task UpdateAsync(string subscription, DateTimeOffset handleTime)
+        public async Task UpdateAsync(string handlerType, DateTimeOffset handleTime)
         {
             using var context = FakeMQContext.GetContext(serviceProvider);
             var item = await context.FakeMQProcesses
                 .AsTracking()
-                .FirstOrDefaultAsync(_ => _.Subscription == subscription);
+                .FirstOrDefaultAsync(_ => _.HandlerType == handlerType);
             if (item == null)
                 return;
             item.LastHandleTime = handleTime;
@@ -75,12 +75,12 @@ namespace Liyanjie.FakeMQ
         }
 
         /// <inheritdoc />
-        public void Update(string subscription, DateTimeOffset handleTime)
+        public void Update(string handlerType, DateTimeOffset handleTime)
         {
             using var context = FakeMQContext.GetContext(serviceProvider);
             var item = context.FakeMQProcesses
                 .AsTracking()
-                .FirstOrDefault(_ => _.Subscription == subscription);
+                .FirstOrDefault(_ => _.HandlerType == handlerType);
             if (item == null)
                 return;
             item.LastHandleTime = handleTime;
@@ -88,12 +88,12 @@ namespace Liyanjie.FakeMQ
         }
 
         /// <inheritdoc />
-        public async Task DeleteAsync(string subscription)
+        public async Task DeleteAsync(string handlerType)
         {
             using var context = FakeMQContext.GetContext(serviceProvider);
             var item = await context.FakeMQProcesses
                 .AsTracking()
-                .FirstOrDefaultAsync(_ => _.Subscription == subscription);
+                .FirstOrDefaultAsync(_ => _.HandlerType == handlerType);
             if (item == null)
                 return;
             context.FakeMQProcesses.Remove(item);
@@ -101,12 +101,12 @@ namespace Liyanjie.FakeMQ
         }
 
         /// <inheritdoc />
-        public void Delete(string subscription)
+        public void Delete(string handlerType)
         {
             using var context = FakeMQContext.GetContext(serviceProvider);
             var item = context.FakeMQProcesses
                 .AsTracking()
-                .FirstOrDefault(_ => _.Subscription == subscription);
+                .FirstOrDefault(_ => _.HandlerType == handlerType);
             if (item == null)
                 return;
             context.FakeMQProcesses.Remove(item);

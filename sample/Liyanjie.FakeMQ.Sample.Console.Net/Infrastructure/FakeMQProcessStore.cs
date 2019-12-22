@@ -16,7 +16,7 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure
         public async Task AddAsync(FakeMQProcess process)
         {
             using var context = new DataContext(dbConnectionString);
-            if (await context.FakeMQProcesses.AnyAsync(_ => _.Subscription == process.Subscription))
+            if (await context.FakeMQProcesses.AnyAsync(_ => _.HandlerType == process.HandlerType))
                 return;
             context.FakeMQProcesses.Add(process);
             await context.SaveChangesAsync();
@@ -24,55 +24,55 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure
         public void Add(FakeMQProcess process)
         {
             using var context = new DataContext(dbConnectionString);
-            if (context.FakeMQProcesses.Any(_ => _.Subscription == process.Subscription))
+            if (context.FakeMQProcesses.Any(_ => _.HandlerType == process.HandlerType))
                 return;
             context.FakeMQProcesses.Add(process);
             context.SaveChanges();
         }
-        public async Task<FakeMQProcess> GetAsync(string subscription)
+        public async Task<FakeMQProcess> GetAsync(string handlerType)
         {
             using var context = new DataContext(dbConnectionString);
             return await context.FakeMQProcesses.AsNoTracking()
-                .SingleOrDefaultAsync(_ => _.Subscription == subscription);
+                .SingleOrDefaultAsync(_ => _.HandlerType == handlerType);
         }
-        public FakeMQProcess Get(string subscription)
+        public FakeMQProcess Get(string handlerType)
         {
             using var context = new DataContext(dbConnectionString);
             return context.FakeMQProcesses.AsNoTracking()
-                .SingleOrDefault(_ => _.Subscription == subscription);
+                .SingleOrDefault(_ => _.HandlerType == handlerType);
         }
-        public async Task UpdateAsync(string subscription, DateTimeOffset handleTime)
+        public async Task UpdateAsync(string handlerType, DateTimeOffset handleTime)
         {
             using var context = new DataContext(dbConnectionString);
-            var item = await context.FakeMQProcesses.SingleOrDefaultAsync(_ => _.Subscription == subscription);
+            var item = await context.FakeMQProcesses.SingleOrDefaultAsync(_ => _.HandlerType == handlerType);
             if (item == null)
                 return;
             item.LastHandleTime = handleTime;
             await context.SaveChangesAsync();
         }
-        public void Update(string subscription, DateTimeOffset handleTime)
+        public void Update(string handlerType, DateTimeOffset handleTime)
         {
             using var context = new DataContext(dbConnectionString);
-            var item = context.FakeMQProcesses.SingleOrDefault(_ => _.Subscription == subscription);
+            var item = context.FakeMQProcesses.SingleOrDefault(_ => _.HandlerType == handlerType);
             if (item == null)
                 return;
             item.LastHandleTime = handleTime;
             context.SaveChangesAsync();
         }
-        public async Task DeleteAsync(string subscription)
+        public async Task DeleteAsync(string handlerType)
         {
             using var context = new DataContext(dbConnectionString);
-            var item = await context.FakeMQProcesses.SingleOrDefaultAsync(_ => _.Subscription == subscription);
+            var item = await context.FakeMQProcesses.SingleOrDefaultAsync(_ => _.HandlerType == handlerType);
             if (item == null)
                 return;
             context.FakeMQProcesses.Remove(item);
             await context.SaveChangesAsync();
         }
 
-        public void Delete(string subscription)
+        public void Delete(string handlerType)
         {
             using var context = new DataContext(dbConnectionString);
-            var item = context.FakeMQProcesses.SingleOrDefault(_ => _.Subscription == subscription);
+            var item = context.FakeMQProcesses.SingleOrDefault(_ => _.HandlerType == handlerType);
             if (item == null)
                 return;
             context.FakeMQProcesses.Remove(item);

@@ -1,4 +1,5 @@
 ﻿using System;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -26,23 +27,22 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         public DbSet<FakeMQProcess> FakeMQProcesses { get; set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="modelBuilder"></param>
+        /// <inheritdoc/>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
             var fakeMQEventTypeBuilder = modelBuilder.Entity<FakeMQEvent>();
             fakeMQEventTypeBuilder.HasKey(_ => _.Id);
-            fakeMQEventTypeBuilder.Property(_ => _.Type).HasMaxLength(50);
+            fakeMQEventTypeBuilder.Property(_ => _.Type).IsRequired().HasMaxLength(50);
+            fakeMQEventTypeBuilder.Property(_ => _.Message).IsRequired();
             fakeMQEventTypeBuilder.HasIndex(_ => _.Type);
             fakeMQEventTypeBuilder.HasIndex(_ => _.CreateTime);
 
             var fakeMQProcessTypeBuilder = modelBuilder.Entity<FakeMQProcess>();
-            fakeMQProcessTypeBuilder.HasKey(_ => _.Subscription);
-            fakeMQProcessTypeBuilder.Property(_ => _.Subscription).HasMaxLength(200);
+            fakeMQProcessTypeBuilder.HasKey(_ => _.HandlerType);
+            fakeMQProcessTypeBuilder.Property(_ => _.HandlerType).HasMaxLength(200);
+            fakeMQProcessTypeBuilder.Property(_ => _.MessageType).IsRequired().HasMaxLength(200);
         }
 
         internal static FakeMQContext GetContext(IServiceProvider serviceProvider)

@@ -14,14 +14,9 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
             this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public void Dispose()
-        {
-            this.context?.Dispose();
-        }
-
         public async Task AddAsync(FakeMQProcess process)
         {
-            if (await context.FakeMQProcesses.AnyAsync(_ => _.Subscription == process.Subscription))
+            if (await context.FakeMQProcesses.AnyAsync(_ => _.HandlerType == process.HandlerType))
                 return;
 
             context.FakeMQProcesses.Add(process);
@@ -30,26 +25,26 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
         }
         public void Add(FakeMQProcess process)
         {
-            if (context.FakeMQProcesses.Any(_ => _.Subscription == process.Subscription))
+            if (context.FakeMQProcesses.Any(_ => _.HandlerType == process.HandlerType))
                 return;
 
             context.FakeMQProcesses.Add(process);
 
             context.SaveChanges();
         }
-        public async Task<FakeMQProcess> GetAsync(string subscription)
+        public async Task<FakeMQProcess> GetAsync(string handlerType)
         {
             return await context.FakeMQProcesses.AsNoTracking()
-                .SingleOrDefaultAsync(_ => _.Subscription == subscription);
+                .SingleOrDefaultAsync(_ => _.HandlerType == handlerType);
         }
         public FakeMQProcess Get(string subscription)
         {
             return context.FakeMQProcesses.AsNoTracking()
-                .SingleOrDefault(_ => _.Subscription == subscription);
+                .SingleOrDefault(_ => _.HandlerType == subscription);
         }
-        public async Task UpdateAsync(string subscription, DateTimeOffset handleTime)
+        public async Task UpdateAsync(string handlerType, DateTimeOffset handleTime)
         {
-            var item = await context.FakeMQProcesses.SingleOrDefaultAsync(_ => _.Subscription == subscription);
+            var item = await context.FakeMQProcesses.SingleOrDefaultAsync(_ => _.HandlerType == handlerType);
             if (item == null)
                 return;
 
@@ -57,9 +52,9 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
 
             await context.SaveChangesAsync();
         }
-        public void Update(string subscription, DateTimeOffset handleTime)
+        public void Update(string handlerType, DateTimeOffset handleTime)
         {
-            var item = context.FakeMQProcesses.SingleOrDefault(_ => _.Subscription == subscription);
+            var item = context.FakeMQProcesses.SingleOrDefault(_ => _.HandlerType == handlerType);
             if (item == null)
                 return;
 
@@ -67,9 +62,9 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
 
             context.SaveChangesAsync();
         }
-        public async Task DeleteAsync(string subscription)
+        public async Task DeleteAsync(string handlerType)
         {
-            var item = await context.FakeMQProcesses.SingleOrDefaultAsync(_ => _.Subscription == subscription);
+            var item = await context.FakeMQProcesses.SingleOrDefaultAsync(_ => _.HandlerType == handlerType);
             if (item == null)
                 return;
 
@@ -78,9 +73,9 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore.Infrastructure
             await context.SaveChangesAsync();
         }
 
-        public void Delete(string subscription)
+        public void Delete(string handlerType)
         {
-            var item = context.FakeMQProcesses.SingleOrDefault(_ => _.Subscription == subscription);
+            var item = context.FakeMQProcesses.SingleOrDefault(_ => _.HandlerType == handlerType);
             if (item == null)
                 return;
 

@@ -84,9 +84,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Infrastructure\EntityConfigurations\FakeMQEventConfiguration.cs" />
-    <Compile Include="Infrastructure\EntityConfigurations\MessageConfiguration.cs" />
-    <Compile Include="Infrastructure\EntityConfigurations\FakeMQProcessConfiguration.cs" />
     <Compile Include="Infrastructure\EventHandlers\MessageEventHandler.cs" />
     <Compile Include="Infrastructure\FakeMQEventStore.cs" />
     <Compile Include="Infrastructure\FakeMQProcessStore.cs" />
