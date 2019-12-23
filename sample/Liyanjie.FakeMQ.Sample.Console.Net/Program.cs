@@ -13,6 +13,8 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net
 {
     class Program
     {
+        internal static string ConnectionString => ConfigurationManager.ConnectionStrings["Sqlite"].ConnectionString;
+
         static async Task ShowMessagesAsync()
         {
             using var context = new DataContext(ConnectionString);
@@ -24,8 +26,6 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net
             System.Console.WriteLine("################################");
             System.Console.WriteLine();
         }
-        static string ConnectionString =>  ConfigurationManager.ConnectionStrings["Sqlite"].ConnectionString;
-
         static async Task Main(string[] args)
         {
             var options = new FakeMQOptions
@@ -33,10 +33,10 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net
                 Serialize = JsonConvert.SerializeObject,
                 Deserialize = JsonConvert.DeserializeObject,
             };
-            var logger= new FakeMQLogger();
+            var logger = new FakeMQLogger();
             var eventBus = new FakeMQEventBus(options, logger, new FakeMQEventStore(ConnectionString), new FakeMQProcessStore(ConnectionString));
-            FakeMQ.Initialize(options,logger,eventBus);
-            await FakeMQ.EventBus.SubscribeAsync<MessageEvent, MessageEventHandler>(new MessageEventHandler(ConnectionString));
+            FakeMQ.Initialize(options, logger, eventBus);
+            await FakeMQ.EventBus.SubscribeAsync<MessageEvent, MessageEventHandler>();
 
             await FakeMQ.StartAsync();
 

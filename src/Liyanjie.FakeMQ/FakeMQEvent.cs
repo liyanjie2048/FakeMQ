@@ -10,11 +10,6 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 
         /// </summary>
-        public Guid Id { get; set; } = Guid.NewGuid();
-
-        /// <summary>
-        /// 
-        /// </summary>
         public DateTimeOffset CreateTime { get; set; } = DateTimeOffset.Now;
 
         /// <summary>

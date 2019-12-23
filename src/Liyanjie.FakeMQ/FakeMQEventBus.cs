@@ -18,7 +18,6 @@ namespace Liyanjie.FakeMQ
     public sealed class FakeMQEventBus
     {
         readonly IDictionary<Type, Type> subscriptions = new Dictionary<Type, Type>();
-        readonly IDictionary<Type, object> handlerObjects = new Dictionary<Type, object>();
         readonly IDictionary<Type, DateTimeOffset> processTimes = new Dictionary<Type, DateTimeOffset>();
 
         readonly FakeMQOptions options;
@@ -66,11 +65,6 @@ namespace Liyanjie.FakeMQ
         /// 所有订阅
         /// </summary>
         public IReadOnlyDictionary<Type, Type> Subscriptions => new ReadOnlyDictionary<Type, Type>(subscriptions);
-
-        /// <summary>
-        /// 事件消息处理器对象
-        /// </summary>
-        public IReadOnlyDictionary<Type, object> HandlerObjects => new ReadOnlyDictionary<Type, object>(handlerObjects);
 
         /// <summary>
         /// 发布事件消息
@@ -123,7 +117,7 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <typeparam name="TEventMessage"></typeparam>
         /// <typeparam name="TEventHandler"></typeparam>
-        public async Task SubscribeAsync<TEventMessage, TEventHandler>(TEventHandler handler = default)
+        public async Task SubscribeAsync<TEventMessage, TEventHandler>()
             where TEventHandler : IFakeMQEventHandler<TEventMessage>
         {
             var messageType = typeof(TEventMessage);
@@ -134,13 +128,10 @@ namespace Liyanjie.FakeMQ
                 await processStore.AddAsync(new FakeMQProcess
                 {
                     HandlerType = handlerType.FullName,
-                    MessageType = messageType.Name,
                 });
                 if (!subscriptions.ContainsKey(handlerType))
                 {
                     subscriptions.Add(handlerType, messageType);
-                    if (handler != null)
-                        handlerObjects.Add(handlerType, handler);
                 }
                 logger.LogDebug($"SubscribeAsync done.Subscription:{GetSubscription(messageType, handlerType)}");
             }
@@ -155,7 +146,7 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <typeparam name="TEventMessage"></typeparam>
         /// <typeparam name="TEventHandler"></typeparam>
-        public void Subscribe<TEventMessage, TEventHandler>(TEventHandler handler = default)
+        public void Subscribe<TEventMessage, TEventHandler>()
             where TEventHandler : IFakeMQEventHandler<TEventMessage>
         {
             var messageType = typeof(TEventMessage);
@@ -166,13 +157,10 @@ namespace Liyanjie.FakeMQ
                 processStore.Add(new FakeMQProcess
                 {
                     HandlerType = handlerType.FullName,
-                    MessageType = messageType.Name,
                 });
                 if (!subscriptions.ContainsKey(handlerType))
                 {
                     subscriptions.Add(handlerType, messageType);
-                    if (handler != null)
-                        handlerObjects.Add(handlerType, handler);
                 }
                 logger.LogDebug($"Subscribe done.Subscription:{GetSubscription(messageType, handlerType)}");
             }
@@ -192,7 +180,6 @@ namespace Liyanjie.FakeMQ
         {
             var messageType = typeof(TEventMessage);
             var handlerType = typeof(TEventHandler);
-            var subscriptionId = GetSubscription(messageType, handlerType);
 
             if (subscriptions.ContainsKey(handlerType))
             {
@@ -316,16 +303,13 @@ namespace Liyanjie.FakeMQ
         }
         object CreateHandler(Type handlerType)
         {
-            var handler = handlerObjects.ContainsKey(handlerType) ? handlerObjects[handlerType] : null;
-            if (handler == null)
-            {
+            var handler =
 #if NET45
-                handler = Activator.CreateInstance(handlerType);
+                Activator.CreateInstance(handlerType);
 #endif
 #if NETSTANDARD2_0 || NETSTANDARD2_1
-                handler = ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider.CreateScope().ServiceProvider, handlerType);
+                ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider.CreateScope().ServiceProvider, handlerType);
 #endif
-            }
             return handler;
         }
         async Task<DateTimeOffset> GetProcessTimeAsync(Type handlerType)

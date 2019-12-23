@@ -22,16 +22,14 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure
             base.OnModelCreating(modelBuilder);
 
             var fakeMQEventTypeBuilder = modelBuilder.Entity<FakeMQEvent>();
-            fakeMQEventTypeBuilder.HasKey(_ => _.Id);
+            fakeMQEventTypeBuilder.HasKey(_ => _.CreateTime);
             fakeMQEventTypeBuilder.Property(_ => _.Type).IsRequired().HasMaxLength(50);
             fakeMQEventTypeBuilder.Property(_ => _.Message).IsRequired();
             fakeMQEventTypeBuilder.HasIndex(_ => _.Type);
-            fakeMQEventTypeBuilder.HasIndex(_ => _.CreateTime);
 
             var fakeMQProcessTypeBuilder = modelBuilder.Entity<FakeMQProcess>();
             fakeMQProcessTypeBuilder.HasKey(_ => _.HandlerType);
             fakeMQProcessTypeBuilder.Property(_ => _.HandlerType).HasMaxLength(200);
-            fakeMQProcessTypeBuilder.Property(_ => _.MessageType).IsRequired().HasMaxLength(200);
 
             var messageTypeBuilder = modelBuilder.Entity<Message>();
             messageTypeBuilder.HasKey(_ => _.Id);
