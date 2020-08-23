@@ -85,8 +85,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Infrastructure\EventHandlers\MessageEventHandler.cs" />
-    <Compile Include="Infrastructure\FakeMQEventStore.cs" />
-    <Compile Include="Infrastructure\FakeMQProcessStore.cs" />
     <Compile Include="Infrastructure\DataContext.cs" />
     <Compile Include="Models\Message.cs" />
     <Compile Include="Models\MessageEvent.cs" />
@@ -98,6 +96,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Liyanjie.FakeMQ.EntityFramework\Liyanjie.FakeMQ.EntityFramework.csproj">
+      <Project>{6f1751a1-f515-4053-8575-bf82bc5ade8e}</Project>
+      <Name>Liyanjie.FakeMQ.EntityFramework</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\src\Liyanjie.FakeMQ\Liyanjie.FakeMQ.csproj">
       <Project>{f0907455-45dc-446c-a378-2a92d0da13ab}</Project>
       <Name>Liyanjie.FakeMQ</Name>
