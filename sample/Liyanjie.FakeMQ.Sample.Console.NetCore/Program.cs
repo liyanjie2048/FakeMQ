@@ -31,7 +31,7 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore
         static async Task ConfigureEventBusAsync(IServiceProvider serviceProvider)
         {
             var eventBus = serviceProvider.GetRequiredService<FakeMQEventBus>();
-            await eventBus.SubscribeAsync<MessageEvent, MessageEventHandler>();
+            await eventBus.RegisterEventHandlerAsync<MessageEvent, MessageEventHandler>();
         }
 
         static async Task<bool> ShowMessagesAsync(IServiceProvider serviceProvider)
@@ -72,10 +72,10 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore
                         await ShowMessagesAsync(serviceProvider);
                         break;
                     case "1":
-                        await FakeMQ.EventBus.PublishAsync(new MessageEvent { Message = $"Action1:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" });
+                        await FakeMQ.EventBus.PublishEventAsync(new MessageEvent { Message = $"Action1:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" });
                         break;
                     case "2":
-                        await FakeMQ.EventBus.PublishAsync(new MessageEvent { Message = $"Action2:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" });
+                        await FakeMQ.EventBus.PublishEventAsync(new MessageEvent { Message = $"Action2:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" });
                         break;
                     case "00":
                         return;

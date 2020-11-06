@@ -36,7 +36,7 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net
             var logger = new FakeMQLogger();
             var eventBus = new FakeMQEventBus(options, logger, new FakeMQEventStore(ConnectionString), new FakeMQProcessStore(ConnectionString));
             FakeMQ.Initialize(options, logger, eventBus);
-            await FakeMQ.EventBus.SubscribeAsync<MessageEvent, MessageEventHandler>();
+            await FakeMQ.EventBus.RegisterEventHandlerAsync<MessageEvent, MessageEventHandler>();
 
             await FakeMQ.StartAsync();
 
@@ -50,10 +50,10 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net
                         await ShowMessagesAsync();
                         break;
                     case "1":
-                        await FakeMQ.EventBus.PublishAsync(new MessageEvent { Message = $"Action1:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" });
+                        await FakeMQ.EventBus.PublishEventAsync(new MessageEvent { Message = $"Action1:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" });
                         break;
                     case "2":
-                        await FakeMQ.EventBus.PublishAsync(new MessageEvent { Message = $"Action2:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" });
+                        await FakeMQ.EventBus.PublishEventAsync(new MessageEvent { Message = $"Action2:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" });
                         break;
                     case "00":
                         return;

@@ -71,7 +71,7 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <typeparam name="TEventMessage"></typeparam>
         /// <param name="message"></param>
-        public async Task PublishAsync<TEventMessage>(TEventMessage message)
+        public async Task PublishEventAsync<TEventMessage>(TEventMessage message)
         {
             var @event = new FakeMQEvent
             {
@@ -94,7 +94,7 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <typeparam name="TEventMessage"></typeparam>
         /// <param name="message"></param>
-        public void Publish<TEventMessage>(TEventMessage message)
+        public void PublishEvent<TEventMessage>(TEventMessage message)
         {
             var @event = new FakeMQEvent
             {
@@ -117,7 +117,7 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <typeparam name="TEventMessage"></typeparam>
         /// <typeparam name="TEventHandler"></typeparam>
-        public async Task SubscribeAsync<TEventMessage, TEventHandler>()
+        public async Task RegisterEventHandlerAsync<TEventMessage, TEventHandler>()
             where TEventHandler : IFakeMQEventHandler<TEventMessage>
         {
             var messageType = typeof(TEventMessage);
@@ -146,7 +146,7 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <typeparam name="TEventMessage"></typeparam>
         /// <typeparam name="TEventHandler"></typeparam>
-        public void Subscribe<TEventMessage, TEventHandler>()
+        public void RegisterEventHandler<TEventMessage, TEventHandler>()
             where TEventHandler : IFakeMQEventHandler<TEventMessage>
         {
             var messageType = typeof(TEventMessage);
@@ -175,7 +175,7 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <typeparam name="TEventMessage"></typeparam>
         /// <typeparam name="TEventHandler"></typeparam>
-        public async Task UnsubscribeAsync<TEventMessage, TEventHandler>()
+        public async Task UnRegisterEventHandlerAsync<TEventMessage, TEventHandler>()
             where TEventHandler : IFakeMQEventHandler<TEventMessage>
         {
             var messageType = typeof(TEventMessage);
@@ -202,7 +202,7 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <typeparam name="TEventMessage"></typeparam>
         /// <typeparam name="TEventHandler"></typeparam>
-        public void Unsubscribe<TEventMessage, TEventHandler>()
+        public void UnRegisterEventHandler<TEventMessage, TEventHandler>()
             where TEventHandler : IFakeMQEventHandler<TEventMessage>
         {
             var messageType = typeof(TEventMessage);

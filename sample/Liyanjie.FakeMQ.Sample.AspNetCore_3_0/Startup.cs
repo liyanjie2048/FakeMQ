@@ -55,7 +55,7 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore_3_0
             });
 
             var eventBus = app.ApplicationServices.GetRequiredService<FakeMQEventBus>();
-            eventBus.SubscribeAsync<MessageEvent, MessageEventHandler>().Wait();
+            eventBus.RegisterEventHandlerAsync<MessageEvent, MessageEventHandler>().Wait();
         }
     }
 }
