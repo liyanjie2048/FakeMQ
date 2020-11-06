@@ -17,7 +17,7 @@ namespace Liyanjie.FakeMQ
     /// </summary>
     public sealed class FakeMQEventBus
     {
-        readonly IDictionary<Type, Type> subscriptions = new Dictionary<Type, Type>();
+        readonly IDictionary<Type, Type> eventHandlers = new Dictionary<Type, Type>();
         readonly IDictionary<Type, DateTimeOffset> processTimes = new Dictionary<Type, DateTimeOffset>();
 
         readonly FakeMQOptions options;
@@ -64,7 +64,7 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 所有订阅
         /// </summary>
-        public IReadOnlyDictionary<Type, Type> Subscriptions => new ReadOnlyDictionary<Type, Type>(subscriptions);
+        public IReadOnlyDictionary<Type, Type> EventHandlers => new ReadOnlyDictionary<Type, Type>(eventHandlers);
 
         /// <summary>
         /// 发布事件消息
@@ -81,11 +81,11 @@ namespace Liyanjie.FakeMQ
             try
             {
                 await eventStore.AddAsync(@event);
-                logger.LogDebug($"PublishAsync done.Message:{@event.Message}");
+                logger.LogDebug($"PublishEventAsync done.Message:{@event.Message}");
             }
             catch (Exception ex)
             {
-                logger.LogError($"PublishAsync error.{ex.GetType().Name}({ex.Message}).Message:{@event.Message}");
+                logger.LogError($"PublishEventAsync error.{ex.GetType().Name}({ex.Message}).Message:{@event.Message}");
             }
         }
 
@@ -104,11 +104,11 @@ namespace Liyanjie.FakeMQ
             try
             {
                 eventStore.Add(@event);
-                logger.LogDebug($"Publish done.Message:{@event.Message}");
+                logger.LogDebug($"PublishEvent done.Message:{@event.Message}");
             }
             catch (Exception ex)
             {
-                logger.LogError($"Publish error.{ex.GetType().Name}({ex.Message}).Message:{@event.Message}");
+                logger.LogError($"PublishEvent error.{ex.GetType().Name}({ex.Message}).Message:{@event.Message}");
             }
         }
 
@@ -129,15 +129,15 @@ namespace Liyanjie.FakeMQ
                 {
                     HandlerType = handlerType.FullName,
                 });
-                if (!subscriptions.ContainsKey(handlerType))
+                if (!eventHandlers.ContainsKey(handlerType))
                 {
-                    subscriptions.Add(handlerType, messageType);
+                    eventHandlers.Add(handlerType, messageType);
                 }
-                logger.LogDebug($"SubscribeAsync done.Subscription:{GetSubscription(messageType, handlerType)}");
+                logger.LogDebug($"RegisterEventHandlerAsync done.EventHandler:{GetEventHandlerId(messageType, handlerType)}");
             }
             catch (Exception ex)
             {
-                logger.LogError($"SubscribeAsync error.{ex.GetType().Name}({ex.Message}).Subscription:{GetSubscription(messageType, handlerType)}");
+                logger.LogError($"RegisterEventHandlerAsync error.{ex.GetType().Name}({ex.Message}).EventHandler:{GetEventHandlerId(messageType, handlerType)}");
             }
         }
 
@@ -158,15 +158,15 @@ namespace Liyanjie.FakeMQ
                 {
                     HandlerType = handlerType.FullName,
                 });
-                if (!subscriptions.ContainsKey(handlerType))
+                if (!eventHandlers.ContainsKey(handlerType))
                 {
-                    subscriptions.Add(handlerType, messageType);
+                    eventHandlers.Add(handlerType, messageType);
                 }
-                logger.LogDebug($"Subscribe done.Subscription:{GetSubscription(messageType, handlerType)}");
+                logger.LogDebug($"RegisterEventHandler done.EventHandler:{GetEventHandlerId(messageType, handlerType)}");
             }
             catch (Exception ex)
             {
-                logger.LogError($"Subscribe error.{ex.GetType().Name}({ex.Message}).Subscription:{GetSubscription(messageType, handlerType)}");
+                logger.LogError($"RegisterEventHandler error.{ex.GetType().Name}({ex.Message}).EventHandler:{GetEventHandlerId(messageType, handlerType)}");
             }
         }
 
@@ -181,18 +181,18 @@ namespace Liyanjie.FakeMQ
             var messageType = typeof(TEventMessage);
             var handlerType = typeof(TEventHandler);
 
-            if (subscriptions.ContainsKey(handlerType))
+            if (eventHandlers.ContainsKey(handlerType))
             {
-                subscriptions.Remove(handlerType);
+                eventHandlers.Remove(handlerType);
 
                 try
                 {
                     await processStore.DeleteAsync(handlerType.FullName);
-                    logger.LogDebug($"UnsubscribeAsync done.Subscription:{GetSubscription(messageType, handlerType)}");
+                    logger.LogDebug($"UnRegisterEventHandlerAsync done.EventHandler:{GetEventHandlerId(messageType, handlerType)}");
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError($"UnsubscribeAsync error.{ex.GetType().Name}({ex.Message}).Subscription:{GetSubscription(messageType, handlerType)}");
+                    logger.LogError($"UnRegisterEventHandlerAsync error.{ex.GetType().Name}({ex.Message}).EventHandler:{GetEventHandlerId(messageType, handlerType)}");
                 }
             }
         }
@@ -208,18 +208,18 @@ namespace Liyanjie.FakeMQ
             var messageType = typeof(TEventMessage);
             var handlerType = typeof(TEventHandler);
 
-            if (subscriptions.ContainsKey(handlerType))
+            if (eventHandlers.ContainsKey(handlerType))
             {
-                subscriptions.Remove(handlerType);
+                eventHandlers.Remove(handlerType);
 
                 try
                 {
                     processStore.Delete(handlerType.FullName);
-                    logger.LogDebug($"Unsubscribe done.Subscription:{GetSubscription(messageType, handlerType)}");
+                    logger.LogDebug($"UnRegisterEventHandler done.EventHandler:{GetEventHandlerId(messageType, handlerType)}");
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError($"Unsubscribe error.{ex.GetType().Name}({ex.Message}).Subscription:{GetSubscription(messageType, handlerType)}");
+                    logger.LogError($"UnRegisterEventHandler error.{ex.GetType().Name}({ex.Message}).EventHandler:{GetEventHandlerId(messageType, handlerType)}");
                 }
             }
         }
@@ -239,9 +239,9 @@ namespace Liyanjie.FakeMQ
                 return;
 
             IsHandling = true;
-            logger.LogTrace("Event handling start");
+            logger.LogTrace("HandleAsync start");
 
-            foreach (var item in subscriptions)
+            foreach (var item in eventHandlers)
             {
                 var messageType = item.Value;
                 var handlerType = item.Key;
@@ -253,7 +253,7 @@ namespace Liyanjie.FakeMQ
                 var handler = CreateHandler(handlerType);
                 if (handler == null)
                 {
-                    logger.LogWarning($"Can't get handler.HandlerType:{handlerType.FullName}");
+                    logger.LogWarning($"Can not get handler.HandlerType:{handlerType.FullName}");
                     continue;
                 }
 
@@ -283,7 +283,7 @@ namespace Liyanjie.FakeMQ
             }
 
             IsHandling = false;
-            logger.LogTrace("Event handling complte");
+            logger.LogTrace("HandleAsync done");
         }
 
         async Task<IEnumerable<FakeMQEvent>> GetEventsAsync(Type messageType, Type handlerType)
@@ -297,7 +297,7 @@ namespace Liyanjie.FakeMQ
             }
             catch (Exception ex)
             {
-                logger.LogError($"Events getting error:{ex.GetType().Name}({ex.Message})");
+                logger.LogError($"GetEventsAsync error:{ex.GetType().Name}({ex.Message})");
                 return null;
             }
         }
@@ -324,16 +324,16 @@ namespace Liyanjie.FakeMQ
             processTimes[handlerType] = handleTime;
             try
             {
-                logger.LogDebug($"Process updating starts.Handle time:{handleTime.ToString("yyyy-MM-dd HH:mm:ss.fffffff zzz")}");
+                logger.LogDebug($"UpdateProcessTimeAsync start.Handle time:{handleTime:yyyy-MM-dd HH:mm:ss.fffffff zzz}");
                 await processStore.UpdateAsync(handlerType.FullName, handleTime);
-                logger.LogDebug($"Process updating done");
+                logger.LogDebug($"UpdateProcessTimeAsync done");
             }
             catch (Exception ex)
             {
-                logger.LogError($"Process updating error:{ex.GetType().Name}({ex.Message})");
+                logger.LogError($"UpdateProcessTimeAsync error:{ex.GetType().Name}({ex.Message})");
             }
         }
 
-        static string GetSubscription(Type messageType, Type handlerType) => $"[{messageType.Name}]->[{handlerType.FullName}]";
+        static string GetEventHandlerId(Type messageType, Type handlerType) => $"[{messageType.Name}]->[{handlerType.FullName}]";
     }
 }
