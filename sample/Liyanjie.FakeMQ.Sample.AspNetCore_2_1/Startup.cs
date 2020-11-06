@@ -25,10 +25,6 @@ namespace Liyanjie.FakeMQ.Sample.AspNetCore_2_1
             {
                 builder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
                 builder.UseSqlite(@"Data Source=.\FakeMQ.sqlite", sqlite => sqlite.MigrationsAssembly(typeof(Startup).Assembly.FullName));
-            }, options =>
-            {
-                options.Serialize = JsonConvert.SerializeObject;
-                options.Deserialize = JsonConvert.DeserializeObject;
             });
 
             services.AddMvc();

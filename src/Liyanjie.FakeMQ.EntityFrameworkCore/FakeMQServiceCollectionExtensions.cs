@@ -21,7 +21,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns></returns>
         public static IServiceCollection AddFakeMQWithEFCore(this IServiceCollection services,
             Action<DbContextOptionsBuilder> configureDbContextOptions,
-            Action<FakeMQOptions> configureFakeMQOptions)
+            Action<FakeMQOptions> configureFakeMQOptions = null)
         {
             services.AddDbContext<FakeMQContext>(configureDbContextOptions);
             services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(configureFakeMQOptions);

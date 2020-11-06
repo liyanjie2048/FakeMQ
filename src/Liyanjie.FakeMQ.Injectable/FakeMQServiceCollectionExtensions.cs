@@ -18,13 +18,14 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="configureOptions"></param>
         /// <returns></returns>
         public static IServiceCollection AddFakeMQ<TEventStore, TProcessStore>(this IServiceCollection services,
-            Action<FakeMQOptions> configureOptions)
+            Action<FakeMQOptions> configureOptions = null)
             where TEventStore : class, IFakeMQEventStore
             where TProcessStore : class, IFakeMQProcessStore
         {
             services.AddSingleton<IFakeMQEventStore, TEventStore>();
             services.AddSingleton<IFakeMQProcessStore, TProcessStore>();
-            services.Configure(configureOptions);
+            if (configureOptions != null)
+                services.Configure(configureOptions);
             services.AddSingleton<FakeMQLogger>();
             services.AddSingleton(serviceProvider => new FakeMQEventBus(serviceProvider));
 

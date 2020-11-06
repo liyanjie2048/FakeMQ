@@ -28,11 +28,7 @@ namespace Liyanjie.FakeMQ.Sample.Console.Net
         }
         static async Task Main(string[] args)
         {
-            var options = new FakeMQOptions
-            {
-                Serialize = JsonConvert.SerializeObject,
-                Deserialize = JsonConvert.DeserializeObject,
-            };
+            var options = new FakeMQOptions();
             var logger = new FakeMQLogger();
             var eventBus = new FakeMQEventBus(options, logger, new FakeMQEventStore(ConnectionString), new FakeMQProcessStore(ConnectionString));
             FakeMQ.Initialize(options, logger, eventBus);
