@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data.Entity;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Liyanjie.FakeMQ
 {
@@ -20,23 +19,7 @@ namespace Liyanjie.FakeMQ
             this.dbConnectionString = dbConnectionString ?? throw new ArgumentNullException(nameof(dbConnectionString));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="process"></param>
-        /// <returns></returns>
-        public async Task AddAsync(FakeMQProcess process)
-        {
-            using var context = new FakeMQContext(dbConnectionString);
-            if (await context.FakeMQProcesses.AnyAsync(_ => _.HandlerType == process.HandlerType))
-                return;
-            context.FakeMQProcesses.Add(process);
-            await context.SaveChangesAsync();
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="process"></param>
+        /// <inheritdoc />
         public void Add(FakeMQProcess process)
         {
             using var context = new FakeMQContext(dbConnectionString);
@@ -46,22 +29,7 @@ namespace Liyanjie.FakeMQ
             context.SaveChanges();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="handlerType"></param>
-        /// <returns></returns>
-        public async Task<FakeMQProcess> GetAsync(string handlerType)
-        {
-            using var context = new FakeMQContext(dbConnectionString);
-            return await context.FakeMQProcesses.AsNoTracking()
-                .SingleOrDefaultAsync(_ => _.HandlerType == handlerType);
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="handlerType"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public FakeMQProcess Get(string handlerType)
         {
             using var context = new FakeMQContext(dbConnectionString);
@@ -69,26 +37,7 @@ namespace Liyanjie.FakeMQ
                 .SingleOrDefault(_ => _.HandlerType == handlerType);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="handlerType"></param>
-        /// <param name="handleTime"></param>
-        /// <returns></returns>
-        public async Task UpdateAsync(string handlerType, DateTimeOffset handleTime)
-        {
-            using var context = new FakeMQContext(dbConnectionString);
-            var item = await context.FakeMQProcesses.SingleOrDefaultAsync(_ => _.HandlerType == handlerType);
-            if (item == null)
-                return;
-            item.LastHandleTime = handleTime;
-            await context.SaveChangesAsync();
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="handlerType"></param>
-        /// <param name="handleTime"></param>
+        /// <inheritdoc />
         public void Update(string handlerType, DateTimeOffset handleTime)
         {
             using var context = new FakeMQContext(dbConnectionString);
@@ -99,24 +48,7 @@ namespace Liyanjie.FakeMQ
             context.SaveChangesAsync();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="handlerType"></param>
-        /// <returns></returns>
-        public async Task DeleteAsync(string handlerType)
-        {
-            using var context = new FakeMQContext(dbConnectionString);
-            var item = await context.FakeMQProcesses.SingleOrDefaultAsync(_ => _.HandlerType == handlerType);
-            if (item == null)
-                return;
-            context.FakeMQProcesses.Remove(item);
-            await context.SaveChangesAsync();
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="handlerType"></param>
+        /// <inheritdoc />
         public void Delete(string handlerType)
         {
             using var context = new FakeMQContext(dbConnectionString);

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -24,30 +23,11 @@ namespace Liyanjie.FakeMQ
         }
 
         /// <inheritdoc />
-        public async Task AddAsync(FakeMQEvent @event)
-        {
-            using var context = FakeMQContext.GetContext(serviceProvider);
-            context.FakeMQEvents.Add(@event);
-            await context.SaveChangesAsync();
-        }
-
-        /// <inheritdoc />
         public void Add(FakeMQEvent @event)
         {
             using var context = FakeMQContext.GetContext(serviceProvider);
             context.FakeMQEvents.Add(@event);
             context.SaveChanges();
-        }
-
-        /// <inheritdoc />
-        public async Task<IEnumerable<FakeMQEvent>> GetAsync(string type, DateTimeOffset fromTime, DateTimeOffset toTime)
-        {
-            using var context = FakeMQContext.GetContext(serviceProvider);
-            return await context.FakeMQEvents
-                .AsNoTracking()
-                .Where(_ => _.Type == type && _.CreateTime > fromTime && _.CreateTime <= toTime)
-                .OrderBy(_ => _.CreateTime)
-                .ToListAsync();
         }
 
         /// <inheritdoc />

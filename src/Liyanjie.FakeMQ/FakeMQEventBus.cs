@@ -71,29 +71,6 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <typeparam name="TEventMessage"></typeparam>
         /// <param name="message"></param>
-        public async Task PublishEventAsync<TEventMessage>(TEventMessage message)
-        {
-            var @event = new FakeMQEvent
-            {
-                Type = typeof(TEventMessage).Name,
-                Message = options.Serialize(message),
-            };
-            try
-            {
-                await eventStore.AddAsync(@event);
-                logger.LogDebug($"PublishEventAsync done.Message:{@event.Message}");
-            }
-            catch (Exception ex)
-            {
-                logger.LogError($"PublishEventAsync error.{ex.GetType().Name}({ex.Message}).Message:{@event.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 发布事件消息
-        /// </summary>
-        /// <typeparam name="TEventMessage"></typeparam>
-        /// <param name="message"></param>
         public void PublishEvent<TEventMessage>(TEventMessage message)
         {
             var @event = new FakeMQEvent
@@ -109,35 +86,6 @@ namespace Liyanjie.FakeMQ
             catch (Exception ex)
             {
                 logger.LogError($"PublishEvent error.{ex.GetType().Name}({ex.Message}).Message:{@event.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 事件消息订阅
-        /// </summary>
-        /// <typeparam name="TEventMessage"></typeparam>
-        /// <typeparam name="TEventHandler"></typeparam>
-        public async Task RegisterEventHandlerAsync<TEventMessage, TEventHandler>()
-            where TEventHandler : IFakeMQEventHandler<TEventMessage>
-        {
-            var messageType = typeof(TEventMessage);
-            var handlerType = typeof(TEventHandler);
-
-            try
-            {
-                await processStore.AddAsync(new FakeMQProcess
-                {
-                    HandlerType = handlerType.FullName,
-                });
-                if (!eventHandlers.ContainsKey(handlerType))
-                {
-                    eventHandlers.Add(handlerType, messageType);
-                }
-                logger.LogDebug($"RegisterEventHandlerAsync done.EventHandler:{GetEventHandlerId(messageType, handlerType)}");
-            }
-            catch (Exception ex)
-            {
-                logger.LogError($"RegisterEventHandlerAsync error.{ex.GetType().Name}({ex.Message}).EventHandler:{GetEventHandlerId(messageType, handlerType)}");
             }
         }
 
@@ -167,33 +115,6 @@ namespace Liyanjie.FakeMQ
             catch (Exception ex)
             {
                 logger.LogError($"RegisterEventHandler error.{ex.GetType().Name}({ex.Message}).EventHandler:{GetEventHandlerId(messageType, handlerType)}");
-            }
-        }
-
-        /// <summary>
-        /// 取消事件消息订阅
-        /// </summary>
-        /// <typeparam name="TEventMessage"></typeparam>
-        /// <typeparam name="TEventHandler"></typeparam>
-        public async Task UnRegisterEventHandlerAsync<TEventMessage, TEventHandler>()
-            where TEventHandler : IFakeMQEventHandler<TEventMessage>
-        {
-            var messageType = typeof(TEventMessage);
-            var handlerType = typeof(TEventHandler);
-
-            if (eventHandlers.ContainsKey(handlerType))
-            {
-                eventHandlers.Remove(handlerType);
-
-                try
-                {
-                    await processStore.DeleteAsync(handlerType.FullName);
-                    logger.LogDebug($"UnRegisterEventHandlerAsync done.EventHandler:{GetEventHandlerId(messageType, handlerType)}");
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError($"UnRegisterEventHandlerAsync error.{ex.GetType().Name}({ex.Message}).EventHandler:{GetEventHandlerId(messageType, handlerType)}");
-                }
             }
         }
 
@@ -246,7 +167,7 @@ namespace Liyanjie.FakeMQ
                 var messageType = item.Value;
                 var handlerType = item.Key;
 
-                var events = await GetEventsAsync(messageType, handlerType);
+                var events = GetEvents(messageType, handlerType);
                 if (events.IsNullOrEmpty())
                     continue;
 
@@ -270,7 +191,7 @@ namespace Liyanjie.FakeMQ
                         logger.LogDebug($"Handling result:{result}");
 
                         if (result)
-                            await UpdateProcessTimeAsync(handlerType, @event.CreateTime);
+                            UpdateProcessTime(handlerType, @event.CreateTime);
                     }
                     catch (Exception ex)
                     {
@@ -286,14 +207,14 @@ namespace Liyanjie.FakeMQ
             logger.LogTrace("HandleAsync done");
         }
 
-        async Task<IEnumerable<FakeMQEvent>> GetEventsAsync(Type messageType, Type handlerType)
+        IEnumerable<FakeMQEvent> GetEvents(Type messageType, Type handlerType)
         {
             try
             {
-                var fromTime = await GetProcessTimeAsync(handlerType);
+                var fromTime = GetProcessTime(handlerType);
                 var toTime = DateTimeOffset.Now;
 
-                return await eventStore.GetAsync(messageType.Name, fromTime, toTime);
+                return eventStore.Get(messageType.Name, fromTime, toTime);
             }
             catch (Exception ex)
             {
@@ -312,20 +233,20 @@ namespace Liyanjie.FakeMQ
 #endif
             return handler;
         }
-        async Task<DateTimeOffset> GetProcessTimeAsync(Type handlerType)
+        DateTimeOffset GetProcessTime(Type handlerType)
         {
             if (!processTimes.ContainsKey(handlerType))
-                processTimes[handlerType] = (await processStore.GetAsync(handlerType.FullName)).LastHandleTime;
+                processTimes[handlerType] = processStore.Get(handlerType.FullName).LastHandleTime;
 
             return processTimes[handlerType];
         }
-        async Task UpdateProcessTimeAsync(Type handlerType, DateTimeOffset handleTime)
+        void UpdateProcessTime(Type handlerType, DateTimeOffset handleTime)
         {
             processTimes[handlerType] = handleTime;
             try
             {
                 logger.LogDebug($"UpdateProcessTimeAsync start.Handle time:{handleTime:yyyy-MM-dd HH:mm:ss.fffffff zzz}");
-                await processStore.UpdateAsync(handlerType.FullName, handleTime);
+                processStore.Update(handlerType.FullName, handleTime);
                 logger.LogDebug($"UpdateProcessTimeAsync done");
             }
             catch (Exception ex)

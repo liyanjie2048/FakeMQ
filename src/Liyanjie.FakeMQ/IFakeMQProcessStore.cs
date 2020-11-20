@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 
 namespace Liyanjie.FakeMQ
 {
@@ -12,21 +11,7 @@ namespace Liyanjie.FakeMQ
         /// 
         /// </summary>
         /// <param name="process"></param>
-        /// <returns></returns>
-        Task AddAsync(FakeMQProcess process);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="process"></param>
         void Add(FakeMQProcess process);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="handlerType"></param>
-        /// <returns></returns>
-        Task<FakeMQProcess> GetAsync(string handlerType);
 
         /// <summary>
         /// 
@@ -40,22 +25,7 @@ namespace Liyanjie.FakeMQ
         /// </summary>
         /// <param name="handlerType"></param>
         /// <param name="handleTime"></param>
-        /// <returns></returns>
-        Task UpdateAsync(string handlerType, DateTimeOffset handleTime);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="handlerType"></param>
-        /// <param name="handleTime"></param>
         void Update(string handlerType, DateTimeOffset handleTime);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="handlerType"></param>
-        /// <returns></returns>
-        Task DeleteAsync(string handlerType);
 
         /// <summary>
         /// 
