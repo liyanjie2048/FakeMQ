@@ -218,7 +218,7 @@ namespace Liyanjie.FakeMQ
             }
             catch (Exception ex)
             {
-                logger.LogError($"GetEventsAsync error:{ex.GetType().Name}({ex.Message})");
+                logger.LogError($"GetEvents error:{ex.GetType().Name}({ex.Message})");
                 return null;
             }
         }
@@ -245,13 +245,13 @@ namespace Liyanjie.FakeMQ
             processTimes[handlerType] = handleTime;
             try
             {
-                logger.LogDebug($"UpdateProcessTimeAsync start.Handle time:{handleTime:yyyy-MM-dd HH:mm:ss.fffffff zzz}");
+                logger.LogDebug($"UpdateProcessTime start.Handle time:{handleTime:yyyy-MM-dd HH:mm:ss.fffffff zzz}");
                 processStore.Update(handlerType.FullName, handleTime);
-                logger.LogDebug($"UpdateProcessTimeAsync done");
+                logger.LogDebug($"UpdateProcessTime done");
             }
             catch (Exception ex)
             {
-                logger.LogError($"UpdateProcessTimeAsync error:{ex.GetType().Name}({ex.Message})");
+                logger.LogError($"UpdateProcessTime error:{ex.GetType().Name}({ex.Message})");
             }
         }
 
