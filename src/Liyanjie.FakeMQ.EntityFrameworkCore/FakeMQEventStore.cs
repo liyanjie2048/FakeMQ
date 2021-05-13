@@ -25,7 +25,7 @@ namespace Liyanjie.FakeMQ
         /// <inheritdoc />
         public void Add(FakeMQEvent @event)
         {
-            using var context = FakeMQContext.GetContext(serviceProvider);
+            using var context = FakeMQDbContext.GetContext(serviceProvider);
             context.FakeMQEvents.Add(@event);
             context.SaveChanges();
         }
@@ -33,7 +33,7 @@ namespace Liyanjie.FakeMQ
         /// <inheritdoc />
         public IEnumerable<FakeMQEvent> Get(string type, DateTimeOffset fromTime, DateTimeOffset toTime)
         {
-            using var context = FakeMQContext.GetContext(serviceProvider);
+            using var context = FakeMQDbContext.GetContext(serviceProvider);
             return context.FakeMQEvents
                 .AsNoTracking()
                 .Where(_ => _.Type == type && _.CreateTime > fromTime && _.CreateTime <= toTime)

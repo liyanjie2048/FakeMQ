@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.1;</TargetFrameworks>
+        <RootNamespace>Liyanjie.FakeMQ</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MongoDB.Driver" Version="2.12.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Liyanjie.FakeMQ.Injectable\Liyanjie.FakeMQ.Injectable.csproj" />
+    </ItemGroup>
+
+</Project>

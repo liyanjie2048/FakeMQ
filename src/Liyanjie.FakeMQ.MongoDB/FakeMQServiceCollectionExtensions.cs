@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Threading.Tasks;
 
 using Liyanjie.FakeMQ;
-
-using Microsoft.EntityFrameworkCore;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -16,14 +13,14 @@ namespace Microsoft.Extensions.DependencyInjection
         /// 
         /// </summary>
         /// <param name="services"></param>
-        /// <param name="configureDbContextOptions"></param>
+        /// <param name="mongoDBConnectionString"></param>
         /// <param name="configureFakeMQOptions"></param>
         /// <returns></returns>
-        public static IServiceCollection AddFakeMQWithEFCore(this IServiceCollection services,
-            Action<DbContextOptionsBuilder> configureDbContextOptions,
+        public static IServiceCollection AddFakeMQWithMongoDB(this IServiceCollection services,
+            string mongoDBConnectionString,
             Action<FakeMQOptions> configureFakeMQOptions = null)
         {
-            services.AddDbContext<FakeMQDbContext>(configureDbContextOptions);
+            services.AddTransient(serivceProvider => new FakeMQMongoDBContext(mongoDBConnectionString));
             services.AddFakeMQ<FakeMQEventStore, FakeMQProcessStore>(configureFakeMQOptions);
 
             return services;

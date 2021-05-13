@@ -24,10 +24,10 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore
             using var context = scope.ServiceProvider.GetService<DataContext>();
             context.Database.EnsureCreated();
         }
-        static async Task ConfigureEventBusAsync(IServiceProvider serviceProvider)
+        static void ConfigureEventBus(IServiceProvider serviceProvider)
         {
             var eventBus = serviceProvider.GetRequiredService<FakeMQEventBus>();
-            await eventBus.RegisterEventHandlerAsync<MessageEvent, MessageEventHandler>();
+            eventBus.RegisterEventHandler<MessageEvent, MessageEventHandler>();
         }
 
         static async Task<bool> ShowMessagesAsync(IServiceProvider serviceProvider)
@@ -53,8 +53,7 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore
             var serviceProvider = services.BuildServiceProvider();
 
             InitializeDatabase(serviceProvider);
-
-            await ConfigureEventBusAsync(serviceProvider);
+            ConfigureEventBus(serviceProvider);
 
             await FakeMQ.StartAsync();
 
@@ -68,10 +67,10 @@ namespace Liyanjie.FakeMQ.Sample.Console.NetCore
                         await ShowMessagesAsync(serviceProvider);
                         break;
                     case "1":
-                        await FakeMQ.EventBus.PublishEventAsync(new MessageEvent { Message = $"Action1:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" });
+                        FakeMQ.EventBus.PublishEvent(new MessageEvent { Message = $"Action1:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" });
                         break;
                     case "2":
-                        await FakeMQ.EventBus.PublishEventAsync(new MessageEvent { Message = $"Action2:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" });
+                        FakeMQ.EventBus.PublishEvent(new MessageEvent { Message = $"Action2:{DateTimeOffset.Now.ToString("yyyyMMddHHmmssfffffffzzzz")}" });
                         break;
                     case "00":
                         return;

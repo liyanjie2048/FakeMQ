@@ -22,7 +22,7 @@ namespace Liyanjie.FakeMQ
         /// <inheritdoc />
         public void Add(FakeMQProcess process)
         {
-            using var context = new FakeMQContext(dbConnectionString);
+            using var context = new FakeMQDbContext(dbConnectionString);
             if (context.FakeMQProcesses.Any(_ => _.HandlerType == process.HandlerType))
                 return;
             context.FakeMQProcesses.Add(process);
@@ -32,7 +32,7 @@ namespace Liyanjie.FakeMQ
         /// <inheritdoc />
         public FakeMQProcess Get(string handlerType)
         {
-            using var context = new FakeMQContext(dbConnectionString);
+            using var context = new FakeMQDbContext(dbConnectionString);
             return context.FakeMQProcesses.AsNoTracking()
                 .SingleOrDefault(_ => _.HandlerType == handlerType);
         }
@@ -40,18 +40,18 @@ namespace Liyanjie.FakeMQ
         /// <inheritdoc />
         public void Update(string handlerType, DateTimeOffset handleTime)
         {
-            using var context = new FakeMQContext(dbConnectionString);
+            using var context = new FakeMQDbContext(dbConnectionString);
             var item = context.FakeMQProcesses.SingleOrDefault(_ => _.HandlerType == handlerType);
             if (item == null)
                 return;
             item.LastHandleTime = handleTime;
-            context.SaveChangesAsync();
+            context.SaveChanges();
         }
 
         /// <inheritdoc />
         public void Delete(string handlerType)
         {
-            using var context = new FakeMQContext(dbConnectionString);
+            using var context = new FakeMQDbContext(dbConnectionString);
             var item = context.FakeMQProcesses.SingleOrDefault(_ => _.HandlerType == handlerType);
             if (item == null)
                 return;

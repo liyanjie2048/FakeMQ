@@ -4,7 +4,7 @@ using Liyanjie.FakeMQ.Sample.Console.Net.Models;
 
 namespace Liyanjie.FakeMQ.Sample.Console.Net.Infrastructure
 {
-    public class DataContext : Liyanjie.FakeMQ.FakeMQContext
+    public class DataContext : Liyanjie.FakeMQ.FakeMQDbContext
     {
         public DataContext(string nameOrConnectionString)
             : base(nameOrConnectionString)

@@ -24,7 +24,7 @@ namespace Liyanjie.FakeMQ
         /// <inheritdoc />
         public void Add(FakeMQProcess process)
         {
-            using var context = FakeMQContext.GetContext(serviceProvider);
+            using var context = FakeMQDbContext.GetContext(serviceProvider);
             if (context.FakeMQProcesses.Any(_ => _.HandlerType == process.HandlerType))
                 return;
             context.FakeMQProcesses.Add(process);
@@ -34,7 +34,7 @@ namespace Liyanjie.FakeMQ
         /// <inheritdoc />
         public FakeMQProcess Get(string handlerType)
         {
-            using var context = FakeMQContext.GetContext(serviceProvider);
+            using var context = FakeMQDbContext.GetContext(serviceProvider);
             return context.FakeMQProcesses
                 .AsNoTracking()
                 .FirstOrDefault(_ => _.HandlerType == handlerType);
@@ -43,7 +43,7 @@ namespace Liyanjie.FakeMQ
         /// <inheritdoc />
         public void Update(string handlerType, DateTimeOffset handleTime)
         {
-            using var context = FakeMQContext.GetContext(serviceProvider);
+            using var context = FakeMQDbContext.GetContext(serviceProvider);
             var item = context.FakeMQProcesses
                 .AsTracking()
                 .FirstOrDefault(_ => _.HandlerType == handlerType);
@@ -56,7 +56,7 @@ namespace Liyanjie.FakeMQ
         /// <inheritdoc />
         public void Delete(string handlerType)
         {
-            using var context = FakeMQContext.GetContext(serviceProvider);
+            using var context = FakeMQDbContext.GetContext(serviceProvider);
             var item = context.FakeMQProcesses
                 .AsTracking()
                 .FirstOrDefault(_ => _.HandlerType == handlerType);

@@ -5,7 +5,7 @@ namespace Liyanjie.FakeMQ
     /// <summary>
     /// 
     /// </summary>
-    public  class FakeMQProcess
+    public class FakeMQProcess
     {
         /// <summary>
         /// 
