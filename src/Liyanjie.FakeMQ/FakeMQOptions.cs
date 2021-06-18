@@ -1,5 +1,5 @@
 ﻿using System;
-#if NET45
+#if NET452
 using Newtonsoft.Json;
 #else
 using System.Text.Json;
@@ -16,7 +16,7 @@ namespace Liyanjie.FakeMQ
         /// 序列化
         /// </summary>
         public Func<object, string> Serialize { get; set; }
-#if NET45
+#if NET452
             = obj => JsonConvert.SerializeObject(obj);
 #else
             = obj => JsonSerializer.Serialize(obj);
@@ -26,7 +26,7 @@ namespace Liyanjie.FakeMQ
         /// 反序列化
         /// </summary>
         public Func<string, Type, object> Deserialize { get; set; }
-#if NET45
+#if NET452
             = (str, type) => JsonConvert.DeserializeObject(str, type);
 #else
             = (str, type) => JsonSerializer.Deserialize(str, type);

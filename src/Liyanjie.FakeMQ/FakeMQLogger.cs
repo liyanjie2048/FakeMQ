@@ -11,7 +11,7 @@ namespace Liyanjie.FakeMQ
     /// </summary>
     public class FakeMQLogger
     {
-#if NET45
+#if NETFRAMEWORK
         readonly NLog.ILogger logger;
         /// <summary>
         /// 
@@ -21,7 +21,7 @@ namespace Liyanjie.FakeMQ
             this.logger = NLog.LogManager.GetLogger(nameof(FakeMQ));
         }
 #endif
-#if NETSTANDARD2_0||NETSTANDARD2_1
+#if NETSTANDARD
         readonly ILogger<FakeMQ> logger;
         /// <summary>
         /// 
@@ -39,10 +39,10 @@ namespace Liyanjie.FakeMQ
         /// <param name="message"></param>
         public void LogTrace(string message)
         {
-#if NET45
+#if NETFRAMEWORK
             logger?.Trace(message);
 #endif
-#if NETSTANDARD2_0||NETSTANDARD2_1
+#if NETSTANDARD
             logger?.LogTrace(message);
 #endif
         }
@@ -53,10 +53,10 @@ namespace Liyanjie.FakeMQ
         /// <param name="message"></param>
         public void LogDebug(string message)
         {
-#if NET45
+#if NETFRAMEWORK
             logger?.Debug(message);
 #endif
-#if NETSTANDARD2_0||NETSTANDARD2_1
+#if NETSTANDARD
             logger?.LogDebug(message);
 #endif
         }
@@ -67,10 +67,10 @@ namespace Liyanjie.FakeMQ
         /// <param name="message"></param>
         public void LogInformation(string message)
         {
-#if NET45
+#if NETFRAMEWORK
             logger?.Info(message);
 #endif
-#if NETSTANDARD2_0||NETSTANDARD2_1
+#if NETSTANDARD
             logger?.LogInformation(message);
 #endif
         }
@@ -81,10 +81,10 @@ namespace Liyanjie.FakeMQ
         /// <param name="message"></param>
         public void LogWarning(string message)
         {
-#if NET45
+#if NETFRAMEWORK
             logger?.Warn(message);
 #endif
-#if NETSTANDARD2_0||NETSTANDARD2_1
+#if NETSTANDARD
             logger?.LogWarning(message);
 #endif
         }
@@ -95,10 +95,10 @@ namespace Liyanjie.FakeMQ
         /// <param name="message"></param>
         public void LogError(string message)
         {
-#if NET45
+#if NETFRAMEWORK
             logger?.Error(message);
 #endif
-#if NETSTANDARD2_0||NETSTANDARD2_1
+#if NETSTANDARD
             logger?.LogError(message);
 #endif
         }

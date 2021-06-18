@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net45;</TargetFrameworks>
+        <TargetFrameworks>net452;net461;</TargetFrameworks>
         <Description>Liyanjie.FakeMQ.EntityFramework</Description>
         <Copyright>© Liyanjie.net</Copyright>
         <Authors>liyanjie8712@outlook.com</Authors>
@@ -20,7 +20,7 @@
         <Move SourceFiles="$(OutputPath)$(PackageId).$(PackageVersion).nupkg" DestinationFolder="D:\_NugetPackages\" />
     </Target>
 
-    <ItemGroup Condition="'$(TargetFramework)'=='net45'">
+    <ItemGroup>
         <PackageReference Include="EntityFramework" Version="6.4.4" />
         <ProjectReference Include="..\Liyanjie.FakeMQ\Liyanjie.FakeMQ.csproj" />
     </ItemGroup>

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-#if NETSTANDARD2_0||NETSTANDARD2_1
+#if NETSTANDARD
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 #endif
@@ -25,7 +25,7 @@ namespace Liyanjie.FakeMQ
         readonly IFakeMQEventStore eventStore;
         readonly IFakeMQProcessStore processStore;
 
-#if NETSTANDARD2_0 || NETSTANDARD2_1
+#if NETSTANDARD
         readonly IServiceProvider serviceProvider;
 
         /// <summary>
@@ -225,10 +225,10 @@ namespace Liyanjie.FakeMQ
         object CreateHandler(Type handlerType)
         {
             var handler =
-#if NET45
+#if NETFRAMEWORK
                 Activator.CreateInstance(handlerType);
 #endif
-#if NETSTANDARD2_0 || NETSTANDARD2_1
+#if NETSTANDARD
                 ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider.CreateScope().ServiceProvider, handlerType);
 #endif
             return handler;

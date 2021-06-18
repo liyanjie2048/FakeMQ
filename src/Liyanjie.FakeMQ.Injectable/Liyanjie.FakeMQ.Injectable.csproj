@@ -20,7 +20,7 @@
         <Move SourceFiles="$(OutputPath)$(PackageId).$(PackageVersion).nupkg" DestinationFolder="D:\_NugetPackages\" />
     </Target>
 
-    <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
+    <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="5.0.0" />
         <ProjectReference Include="..\Liyanjie.FakeMQ\Liyanjie.FakeMQ.csproj" />
     </ItemGroup>
