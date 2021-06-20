@@ -9,6 +9,7 @@
         <RepositoryUrl>https://github.com/liyanjie8712/FakeMQ</RepositoryUrl>
         <PackageProjectUrl>https://github.com/liyanjie8712/FakeMQ</PackageProjectUrl>
         <RepositoryType>Git</RepositoryType>
+        <Version>1.0.0</Version>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -16,7 +17,7 @@
     </PropertyGroup>
 
     <Target Name="MovePackage" AfterTargets="Pack">
-        <Move SourceFiles="$(OutputPath)$(PackageId).$(PackageVersion).nupkg" DestinationFolder="D:\_NugetPackages\" />
+        <Move SourceFiles="$(OutputPath)$(PackageId).$(PackageVersion).nupkg" DestinationFolder="C:\_NugetPackages\" />
     </Target>
 
     <ItemGroup>
