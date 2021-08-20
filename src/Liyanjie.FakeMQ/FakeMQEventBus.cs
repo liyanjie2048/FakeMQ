@@ -21,7 +21,6 @@ namespace Liyanjie.FakeMQ
         readonly IDictionary<Type, DateTimeOffset> processTimes = new Dictionary<Type, DateTimeOffset>();
 
         readonly ILogger<FakeMQEventBus> logger;
-        readonly FakeMQOptions options;
         readonly IFakeMQEventStore eventStore;
         readonly IFakeMQProcessStore processStore;
         readonly IServiceProvider serviceProvider;
