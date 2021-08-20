@@ -22,12 +22,11 @@ namespace Microsoft.Extensions.DependencyInjection
             where TEventStore : class, IFakeMQEventStore
             where TProcessStore : class, IFakeMQProcessStore
         {
-            services.AddSingleton<IFakeMQEventStore, TEventStore>();
-            services.AddSingleton<IFakeMQProcessStore, TProcessStore>();
             if (configureOptions != null)
                 services.Configure(configureOptions);
-            services.AddSingleton<FakeMQLogger>();
-            services.AddSingleton(serviceProvider => new FakeMQEventBus(serviceProvider));
+            services.AddSingleton<FakeMQEventBus>();
+            services.AddSingleton<IFakeMQEventStore, TEventStore>();
+            services.AddSingleton<IFakeMQProcessStore, TProcessStore>();
 
             services.AddHostedService<FakeMQBackgroundService>();
 

@@ -15,15 +15,10 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="options"></param>
-        /// <param name="logger"></param>
-        /// <param name="eventBus"></param>
-        public FakeMQBackgroundService(
-            IOptions<FakeMQOptions> options,
-            FakeMQLogger logger,
-            FakeMQEventBus eventBus)
+        /// <param name="serviceProvider"></param>
+        public FakeMQBackgroundService(IServiceProvider serviceProvider)
         {
-            FakeMQ.Initialize(options.Value, logger, eventBus);
+            FakeMQ.Initialize(serviceProvider);
         }
 
         /// <summary>

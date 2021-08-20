@@ -2,6 +2,10 @@
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
 namespace Liyanjie.FakeMQ
 {
     /// <summary>
@@ -9,8 +13,8 @@ namespace Liyanjie.FakeMQ
     /// </summary>
     public sealed class FakeMQ
     {
+        static ILogger<FakeMQ> logger;
         static FakeMQOptions options;
-        static FakeMQLogger logger;
         static FakeMQEventBus eventBus;
         static CancellationTokenSource stoppingCts;
         static Task executingTask;
@@ -23,17 +27,12 @@ namespace Liyanjie.FakeMQ
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="options"></param>
-        /// <param name="logger"></param>
-        /// <param name="eventBus"></param>
-        public static void Initialize(
-            FakeMQOptions options,
-            FakeMQLogger logger,
-            FakeMQEventBus eventBus)
+        /// <param name="serviceProvider"></param>
+        public static void Initialize(IServiceProvider serviceProvider)
         {
-            FakeMQ.options = options ?? throw new ArgumentNullException(nameof(options));
-            FakeMQ.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            FakeMQ.eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
+            FakeMQ.logger = serviceProvider.GetRequiredService<ILogger<FakeMQ>>();
+            FakeMQ.options = serviceProvider.GetRequiredService<IOptions<FakeMQOptions>>().Value;
+            FakeMQ.eventBus = serviceProvider.GetRequiredService<FakeMQEventBus>();
             FakeMQ.stoppingCts = new CancellationTokenSource();
         }
 

@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 
-#if NETSTANDARD
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-#endif
 
 namespace Liyanjie.FakeMQ
 {
@@ -20,45 +20,29 @@ namespace Liyanjie.FakeMQ
         readonly IDictionary<Type, Type> eventHandlers = new Dictionary<Type, Type>();
         readonly IDictionary<Type, DateTimeOffset> processTimes = new Dictionary<Type, DateTimeOffset>();
 
+        readonly ILogger<FakeMQEventBus> logger;
         readonly FakeMQOptions options;
-        readonly FakeMQLogger logger;
         readonly IFakeMQEventStore eventStore;
         readonly IFakeMQProcessStore processStore;
-
-#if NETSTANDARD
         readonly IServiceProvider serviceProvider;
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="serviceProvider"></param>
-        public FakeMQEventBus(IServiceProvider serviceProvider)
-        {
-            this.serviceProvider = serviceProvider;
-            this.options = serviceProvider.GetRequiredService<IOptions<FakeMQOptions>>().Value;
-            this.logger = serviceProvider.GetRequiredService<FakeMQLogger>();
-            this.eventStore = serviceProvider.GetRequiredService<IFakeMQEventStore>();
-            this.processStore = serviceProvider.GetRequiredService<IFakeMQProcessStore>();
-        }
-#endif
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="options"></param>
         /// <param name="logger"></param>
         /// <param name="eventStore"></param>
         /// <param name="processStore"></param>
+        /// <param name="serviceProvider"></param>
         public FakeMQEventBus(
-            FakeMQOptions options,
-            FakeMQLogger logger,
+            ILogger<FakeMQEventBus> logger,
             IFakeMQEventStore eventStore,
-            IFakeMQProcessStore processStore)
+            IFakeMQProcessStore processStore,
+            IServiceProvider serviceProvider)
         {
-            this.options = options;
             this.logger = logger;
             this.eventStore = eventStore;
             this.processStore = processStore;
+            this.serviceProvider = serviceProvider;
         }
 
         /// <summary>
@@ -76,7 +60,7 @@ namespace Liyanjie.FakeMQ
             var @event = new FakeMQEvent
             {
                 Type = typeof(TEventMessage).Name,
-                Message = options.Serialize(message),
+                Message = JsonSerializer.Serialize(message),
             };
             try
             {
@@ -186,7 +170,7 @@ namespace Liyanjie.FakeMQ
 
                     try
                     {
-                        var result = await (Task<bool>)method.Invoke(handler, new[] { options.Deserialize(@event.Message, messageType) });
+                        var result = await (Task<bool>)method.Invoke(handler, new[] { JsonSerializer.Deserialize(@event.Message, messageType) });
 
                         logger.LogDebug($"Handling result:{result}");
 
@@ -224,14 +208,7 @@ namespace Liyanjie.FakeMQ
         }
         object CreateHandler(Type handlerType)
         {
-            var handler =
-#if NETFRAMEWORK
-                Activator.CreateInstance(handlerType);
-#endif
-#if NETSTANDARD
-                ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider.CreateScope().ServiceProvider, handlerType);
-#endif
-            return handler;
+            return ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider.CreateScope().ServiceProvider, handlerType);
         }
         DateTimeOffset GetProcessTime(Type handlerType)
         {

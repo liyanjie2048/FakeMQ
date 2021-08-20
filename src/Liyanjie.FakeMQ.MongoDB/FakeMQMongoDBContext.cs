@@ -14,6 +14,26 @@ namespace Liyanjie.FakeMQ
             var mongoUrl = new MongoUrlBuilder(connectionString).ToMongoUrl();
             client = new MongoClient(mongoUrl);
             database = client.GetDatabase(mongoUrl.DatabaseName);
+
+            Seed();
+        }
+        void Seed()
+        {
+            if (!Events.Indexes.List().Any())
+            {
+                Events.Indexes.CreateMany(new[]
+                {
+                    new CreateIndexModel<MongoDBFakeMQEvent>(Builders<MongoDBFakeMQEvent>.IndexKeys.Descending(_ => _.CreateTime)),
+                });
+            }
+
+            if (!Processes.Indexes.List().Any())
+            {
+                Processes.Indexes.CreateMany(new[]
+                {
+                    new CreateIndexModel<MongoDBFakeMQProcess>(Builders<MongoDBFakeMQProcess>.IndexKeys.Descending(_ => _.HandlerType)),
+                });
+            }
         }
 
         public IMongoCollection<MongoDBFakeMQEvent> Events => database.GetCollection<MongoDBFakeMQEvent>(nameof(Events));
